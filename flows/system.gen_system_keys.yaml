@@ -1,9 +1,0 @@
-id: gen_system_keys
-namespace: system
-
-tasks: 
-  - id: gmail_address
-    type: io.kestra.plugin.core.kv.Set
-    key: MY_GMAIL
-    kvType: STRING
-    value: acasavilca@gmail.com

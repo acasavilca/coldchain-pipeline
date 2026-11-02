@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: coldchain_raw
+    database: fruit-packing-plant-simulator
+    schema: coldchain_raw
+    tables:
+      - name: telemetry
+        description: "Long-format tag/timestamp/value telemetry from refrigeration cycle + room sensors."
+        columns:
+          - name: timestamp_ms
+            data_tests: [not_null]
+          - name: tag_name
+            data_tests: [not_null]
+
+      - name: batch_sensors
+        description: "Long-format tag/timestamp/value sensors mounted on pallets (pulp temp probe, load cell)."
+        columns:
+          - name: timestamp_ms
+            data_tests: [not_null]
+          - name: batch_id
+            data_tests: [not_null]
+
+      - name: compressor_events
+      - name: humidifier_events
+      - name: door_events
+      - name: crop_rotation_events
+      - name: refrigerant_rotation_events
+      - name: downtime_sequence_events
+      - name: lp_trip_events
+        description: "Low-pressure switch trip/reset events from the refrigeration controller."
+      - name: defrost_events
+        description: "One row per electric defrost cycle: start/end, termination reason, and ice melted/shed (grams)."
+
+      - name: inbound_orders
+        columns:
+          - name: order_id
+            data_tests: [not_null, unique]
+
+      - name: outbound_orders
+        columns:
+          - name: order_id
+            data_tests: [not_null, unique]
+
+      - name: inbound_pallet_history
+        columns:
+          - name: batch_id
+            data_tests: [not_null]
+          - name: parent_order_id
+            data_tests:
+              - relationships:
+                  arguments:
+                    to: source('coldchain_raw', 'inbound_orders')
+                    field: order_id
+
+      - name: outbound_pallet_history
+        columns:
+          - name: batch_id
+            tests: [not_null]
+          - name: parent_order_id
+            tests:
+              - relationships:
+                  arguments:
+                    to: source('coldchain_raw', 'outbound_orders')
+                    field: order_id
+
+      - name: weather_data

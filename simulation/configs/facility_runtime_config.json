@@ -1,0 +1,627 @@
+{
+  "metadata": {
+    "config_version": "1.0.0",
+    "facility_name": "Chao_Cold_Chain_Hub_Alpha",
+    "last_updated_year": 2026
+  },
+
+  "facility_location": {
+    "active_location_id": 1,
+    "locations": {
+      "1": {
+        "id_code": 1,
+        "name": "Chao (Virú Valley)",
+        "latitude": -8.5771,
+        "longitude": -78.5661,
+        "ambient_design_temperature_c": 25.0,
+        "soil_temperature_54cm_fallback": 25.0
+      },
+      "2": {
+        "id_code": 2,
+        "name": "Ica (Villacurí Valley)",
+        "latitude": -14.0678,
+        "longitude": -75.7286,
+        "ambient_design_temperature_c": 25.0,
+        "soil_temperature_54cm_fallback": 25.0
+      },
+      "3": {
+        "id_code": 3,
+        "name": "Chincha",
+        "latitude": -13.4167,
+        "longitude": -76.1333,
+        "ambient_design_temperature_c": 25.0,
+        "soil_temperature_54cm_fallback": 25.0
+      },
+      "4": {
+        "id_code": 4,
+        "name": "Arequipa (Majes / Pedregal Valley)",
+        "latitude": -16.3235,
+        "longitude": -72.2081,
+        "ambient_design_temperature_c": 25.0,
+        "soil_temperature_54cm_fallback": 25.0
+      }
+    }
+  },
+
+  "active_equipment_id_selection": {
+    "compressor": 1,
+    "evaporator": 1,
+    "condenser": 2
+  },
+
+  "static_weather_data": {
+    "co2_outdoor_ppm": 420.0,
+    "o2_outdoor_pct": 20.9
+  },
+
+  "simulation_runtime_settings": {
+    "dt_engine_seconds": 0.1,
+    "max_numerical_solver_iterations": 250,
+    "numerical_solver_tolerance": 1e-2,
+    "forcing_arrays_resample_interval_sec": 60.0,
+    "required_weather_measurements": "temperature_2m,relative_humidity_2m,wind_speed_10m,shortwave_radiation,dewpoint_2m,surface_pressure,soil_temperature_54cm",
+    "leak_noise_factor_resample_interval_sec": 60.0,
+    "rng_seed": 42
+  },
+  
+  "room_structural_geometry": {
+    "length_m": 20.0,
+    "width_m": 15.0,
+    "height_m": 6.0,
+    "U_wall_w_m2_k": 0.225,
+    "U_floor_w_m2_k": 0.75,
+    "U_ground_w_m2_k": 0.35,
+    "alpha_roof_solar_absorp": 0.60,
+    "f_structure_mass_scaler": 0.10,
+    "h_i_walls_w_m2_k": 8.0,
+    "h_i_roof_w_m2_k": 6.0,
+    "h_i_floor_w_m2_k": 8.0,
+    "n_ach_nominal_per_day": 2.0
+  },
+
+  "building_insulation_layer_materials": {
+    "concrete_slab_thickness_m": 0.15,
+    "concrete_density_kg_m3": 2300.0,
+    "concrete_specific_heat_j_kg_k": 880.0, 
+    "insulation_panel_thickness_m": 0.12,
+    "insulation_panel_density_kg_m3": 40.0,
+    "insulation_panel_specific_heat_j_kg_k": 1400.0
+  },
+
+  "adjacent_plant_thermal_model": {
+    "T_plant_coeff_a": 16.0,
+    "T_plant_coeff_b": 0.25,
+    "dt_update_sec": 60.0,
+    "tau_plant_thermal_lag_sec": 7200.0,
+    
+    "RH_plant_coeff_a": 40.0,
+    "RH_plant_coeff_b": 0.35,
+    "tau_plant_vapor_lag_sec": 1800.0
+  },
+
+  "general_logistics_and_cargo_properties": {
+    "td_coeff_cross_flow_penalty": 0.15,
+    "logistics_planner_evaluation_interval_sec": 60.0,
+    "spoilage_check_interval_sec": 900.0,
+    "driver_convective_q_resample_interval_sec": 30.0,
+
+    "macro_arrival_order_buffer_delay_mean_min": 2.0,
+    "macro_dispatch_order_buffer_delay_mean_min": 6.0,
+    "macro_emergency_dump_buffer_delay_mean_min": 3.0,
+    "macro_order_buffer_delay_distribution_shape": 3.0,
+
+    "staging_delay_mean_sec": 20.0,
+    "staging_delay_shape": 3.0,
+    "outbound_leg_mean_sec": 15.0,
+    "outbound_leg_shape": 2.0,
+    "return_leg_mean_sec": 20.0,
+    "return_leg_shape": 2.0,
+
+    "baseline_probability_gate_override": 0.003,
+    "baseline_probability_forget_door": 0.003,
+    "baseline_probability_forget_door_remedy": 0.5,
+    "baseline_probability_supervisor_forget_door": 0.001,
+    "baseline_probability_spoilage_override": 0.002,
+
+    "crop_rotation_downtime_duration_hrs": 12.0,
+    "refrigerant_rotation_downtime_duration_hrs": 24.0,
+    "minimum_operation_period_viable_hrs": 2.0
+  },
+
+  "refrigeration_and_humidifier_hardware": {
+    "heat_exchanger_metal_specific_heat_j_kg_k": 480.0,
+    "evaporator_design_temperature_difference_k": 5.5,
+    "condenser_design_temperature_difference_k": 10.0,
+    "fans_lumped_efficiency_fraction": 0.47,
+    "compressor_deadband_differential_c": 1.0,
+    "compressor_evaluation_interval_sec": 1.0,
+    "compressor_minimum_idle_time_sec": 300.0,
+    "compressor_minimum_active_time_sec": 300.0,
+    "evaporator_airflow_proof": {
+      "sensor_candidate": "Degree Controls S100 return-air velocity switch",
+      "trip_velocity_m_s": 1.0,
+      "recovery_multiplier": 1.15,
+      "condition_delay_sec": 10.0,
+      "assumption": "The switch is mounted in representative return air; V_dot divided by rated coil frontal area approximates local velocity. Its internal sample cadence, filter, and noise are declared simulation assumptions, not S100 specifications. Verify placement and non-condensing conditions at the 92.5% RH room setpoint before treating this as installed equipment. The S100 manual specifies a 10 s alarm delay and recovery at 115% of trip point."
+    },
+    "electric_defrost_control": {
+      "enabled": true,
+      "interval_sec": 21600.0,
+      "settle_sec": 30.0,
+      "minimum_heat_sec": 0.0,
+      "maximum_heat_sec": 2700.0,
+      "termination_coil_temp_c": 6.0,
+      "termination_probe_hold_sec": 30.0,
+      "drip_sec": 180.0,
+      "fan_delay_max_sec": 300.0,
+      "fan_restart_coil_temp_c": -5.0,
+      "airflow_proof_grace_sec": 30.0,
+      "assumption": "Initial trial control settings; these timing and temperature thresholds are not verified manufacturer settings for this installation. Termination requires the filtered coil probe to remain above 6 C for the declared 30 s hold; no separate fixed minimum is used because it overheated the nearly clear coil in the 0 C test."
+    },
+    "temperature_hysteresis_enter_margin_c": 0.15,
+    "temperature_hysteresis_exit_margin_c": 0.10,
+    "humidifier_max_mass_flow_per_disc_L_hr": 0.75,
+    "humidifier_discs_per_cluster_count": 4,
+    "humidifier_max_total_discs_ceiling": 24,
+    "humidifier_fan_inertia_time_constant_sec": 1.5
+  },
+
+  "digital_sensor_monitoring_profiles": {
+    "temperature_sensor_sampling_interval_sec": 1.0,
+    "temperature_sensor_filter_window_sec": 20.0,
+    "temperature_sensor_noise_scale_c": 0.05,
+    "temperature_sensor_lower_limit_c": -40.0,
+    "temperature_sensor_upper_limit_c": 60.0,
+
+    "coil_temp_sensor_sampling_interval_sec": 1.0,
+    "coil_temp_sensor_filter_window_sec": 2.0,
+    "coil_temp_sensor_noise_scale_c": 0.05,
+    "coil_temp_sensor_lower_limit_c": -40.0,
+    "coil_temp_sensor_upper_limit_c": 60.0,
+
+    "evap_air_velocity_sensor_sampling_interval_sec": 1.0,
+    "evap_air_velocity_sensor_filter_window_sec": 1.0,
+    "evap_air_velocity_sensor_noise_scale_m_s": 0.02,
+    "evap_air_velocity_sensor_lower_limit_m_s": 0.0,
+    "evap_air_velocity_sensor_upper_limit_m_s": 20.0,
+
+    "relative_humidity_sensor_sampling_interval_sec": 0.1,
+    "relative_humidity_sensor_filter_window_sec": 5.0,
+    "relative_humidity_sensor_noise_scale_frac": 0.005,
+    "relative_humidity_sensor_lower_limit_frac": 0.0,
+    "relative_humidity_sensor_upper_limit_frac": 1.0,
+
+    "suction_line_temp_sensor_sampling_interval_sec": 1.0,
+    "suction_line_temp_sensor_filter_window_sec": 2.0,
+    "suction_line_temp_sensor_noise_scale_c": 0.05,
+    "suction_line_temp_sensor_lower_limit": -40.0,
+    "suction_line_temp_sensor_upper_limit": 60.0,
+    
+    "suction_line_pressure_sensor_sampling_interval_sec": 0.1,
+    "suction_line_pressure_sensor_filter_window_sec": 0.1,
+    "suction_line_pressure_sensor_noise_scale_bar": 0.02,
+    "suction_line_pressure_sensor_lower_limit": 0.0,
+    "suction_line_pressure_sensor_upper_limit": 30.0,
+    
+    "liquid_line_temp_sensor_sampling_interval_sec": 1.0,
+    "liquid_line_temp_sensor_filter_window_sec": 2.0,
+    "liquid_line_temp_sensor_noise_scale_c": 0.05,
+    "liquid_line_temp_sensor_lower_limit": -20.0,
+    "liquid_line_temp_sensor_upper_limit": 80.0,
+    
+    "liquid_line_pressure_sensor_sampling_interval_sec": 0.1,
+    "liquid_line_pressure_sensor_filter_window_sec": 0.1,
+    "liquid_line_pressure_sensor_noise_scale_bar": 0.02,
+    "liquid_line_pressure_sensor_lower_limit": 0.0,
+    "liquid_line_pressure_sensor_upper_limit": 40.0,
+    
+    "compressor_power_sensor_sampling_interval_sec": 1.0,
+    "compressor_power_sensor_filter_window_sec": 2.0,
+    "compressor_power_sensor_noise_scale_w": 25.0,
+    "compressor_power_sensor_upper_limit_w": 25000.0,
+    
+    "room_air_return_temp_sensor_sampling_interval_sec": 1.0,
+    "room_air_return_temp_sensor_filter_window_sec": 20.0,
+    "room_air_return_temp_sensor_noise_scale_c": 0.05,
+    "room_air_return_temp_sensor_lower_limit": -40.0,
+    "room_air_return_temp_sensor_upper_limit": 60.0,
+    
+    "room_air_supply_temp_sensor_sampling_interval_sec": 1.0,
+    "room_air_supply_temp_sensor_filter_window_sec": 20.0,
+    "room_air_supply_temp_sensor_noise_scale_c": 0.05,
+    "room_air_supply_temp_sensor_lower_limit": -40.0,
+    "room_air_supply_temp_sensor_upper_limit": 60.0,
+    
+    "room_air_supply_rh_sensor_sampling_interval_sec": 0.1,
+    "room_air_supply_rh_sensor_filter_window_sec": 5.0,
+    "room_air_supply_rh_sensor_noise_scale_frac": 0.005,
+    "room_air_supply_rh_sensor_lower_limit_frac": 0.0,
+    "room_air_supply_rh_sensor_upper_limit_frac": 1.0,
+    
+    "co2_sensor_sampling_interval_sec": 5.0,
+    "co2_sensor_filter_window_sec": 30.0,
+    "co2_sensor_noise_scale_ppm": 15.0,
+    "co2_sensor_lower_limit": 0.0,
+    "co2_sensor_upper_limit": 10000.0,
+    
+    "o2_sensor_sampling_interval_sec": 5.0,
+    "o2_sensor_filter_window_sec": 30.0,
+    "o2_sensor_noise_scale_pct": 0.1,
+    "o2_sensor_lower_limit": 0.0,
+    "o2_sensor_upper_limit": 25.0,
+
+    "pulp_temp_sensor_sampling_interval_sec": 600.0,
+    "pulp_temp_sensor_filter_window_sec": 1800.0,
+    "pulp_temp_sensor_noise_scale_c": 0.3,
+    "pulp_temp_sensor_lower_limit": -30.0,
+    "pulp_temp_sensor_upper_limit": 60.0,
+
+    "load_cell_sensor_sampling_interval_sec": 600.0,
+    "load_cell_sensor_filter_window_sec": 1800.0,
+    "load_cell_sensor_noise_scale_kg": 0.05,
+    "load_cell_sensor_lower_limit": 0.0,
+    "load_cell_sensor_upper_limit": 2000.0
+  },
+
+  "auxiliary_environmental_hardware": {
+    "expansion_valve_temperature_setpoint_c": 30.0,
+    "expansion_valve_proportional_band_k": 4.0,
+    "expansion_valve_subcooling_approach_k": 3.0,
+
+    "superheat_pid_evaluation_interval_sec": 1.0,
+    "superheat_pid_K_p": 100.0,
+    "superheat_pid_K_i": 2.5,
+    "superheat_pid_K_d": 0.0,
+    "superheat_pid_min_output": 0.0,
+    "superheat_pid_max_output": 2625.0,
+    "superheat_closed_valve_k": 0.0,
+    "superheat_target_setpoint_k": 10.0,
+
+    "relative_humidity_pid_evaluation_interval_sec": 1.0,
+    "relative_humidity_pid_K_p": 2.0,
+    "relative_humidity_pid_K_i": 0.15,
+    "relative_humidity_pid_K_d": 0.10,
+    "relative_humidity_pid_min_output": 0.0,
+    "relative_humidity_pid_max_output": 1.0
+  },
+
+  "doorway_channels_mechanical_specs": [
+    {
+      "door_code": 0,
+      "door_name": "internal",
+      "door_tau_sec": 3.0,
+      "door_height_m": 3.5,
+      "door_width_m": 2.5,
+      "door_c_wind_capture": 0.0,
+      "door_k_strip_buoyancy": 0.20,
+      "door_c_rectangular_discharge": 0.61,
+      "door_transit_baseline_sec": 5.0,
+      "door_alarm_trigger_sec": 120.0
+    },
+    {
+      "door_code": 1,
+      "door_name": "external",
+      "door_tau_sec": 5.0,
+      "door_height_m": 4.0,
+      "door_width_m": 3.0,
+      "door_c_wind_capture": 0.10,
+      "door_k_strip_buoyancy": 0.10,
+      "door_c_rectangular_discharge": 0.61,
+      "door_transit_baseline_sec": 5.0,
+      "door_alarm_trigger_sec": 90.0
+    }
+  ],
+
+  "macro_scheduling_environment": {
+    "simulation_baseline_year": 2022,
+    "day_of_week_labor_capacity_weights": [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.40],
+    "lambda_arrival_per_hour_list": [
+        0.00, 0.00, 0.00, 0.00, 0.00, 0.05,
+        0.20, 0.60, 1.20, 1.50, 1.20, 0.80,
+        0.60, 0.50, 0.80, 1.00, 1.20, 1.00,
+        0.50, 0.20, 0.05, 0.00, 0.00, 0.00
+    ],
+    "lambda_shipment_per_hour_list": [
+        0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+        0.00, 0.00, 0.05, 0.10, 0.15, 0.20,
+        0.40, 0.50, 0.80, 1.00, 1.20, 1.00,
+        0.50, 0.20, 0.05, 0.00, 0.00, 0.00
+    ]
+  },
+
+  "employee_workforce_roster": [
+    {
+      "operator_code": 0,
+      "operator_name": "Highly Disciplined Veteran",
+      "base_carelessness_factor": 1.02,
+      "fatigue_sensitivity_scale": 0.20,
+      "error_baseline_probability": 0.005,
+      "error_sensitivity_slope": 0.50,
+      "forklift_slack_low_bound_sec": 1.0,
+      "forklift_slack_high_bound_sec": 2.0,
+
+      "convective_heat_load_mean_w": 2200.0,
+      "convective_heat_load_scale_w": 315.0,
+      "convective_heat_load_low_w": 1050.0,
+      "convective_heat_load_high_w": 3150.0
+    },
+    {
+      "operator_code": 1,
+      "operator_name": "Baseline Standard Driver",
+      "base_carelessness_factor": 1.08,
+      "fatigue_sensitivity_scale": 0.85,
+      "error_baseline_probability": 0.015,
+      "error_sensitivity_slope": 1.10,
+      "forklift_slack_low_bound_sec": 1.0,
+      "forklift_slack_high_bound_sec": 2.5,
+
+      "convective_heat_load_mean_w": 2400.0,
+      "convective_heat_load_scale_w": 360.0,
+      "convective_heat_load_low_w": 1200.0,
+      "convective_heat_load_high_w": 3600.0
+    },
+    {
+      "operator_code": 2,
+      "operator_name": "Trained Rookie",
+      "base_carelessness_factor": 1.12,
+      "fatigue_sensitivity_scale": 1.40,
+      "error_baseline_probability": 0.020,
+      "error_sensitivity_slope": 1.60,
+      "forklift_slack_low_bound_sec": 1.2,
+      "forklift_slack_high_bound_sec": 3.0,
+
+      "convective_heat_load_mean_w": 2600.0,
+      "convective_heat_load_scale_w": 390.0,
+      "convective_heat_load_low_w": 1300.0,
+      "convective_heat_load_high_w": 3900.0
+    },
+    {
+      "operator_code": 3,
+      "operator_name": "Careless Novice",
+      "base_carelessness_factor": 1.35,
+      "fatigue_sensitivity_scale": 1.80,
+      "error_baseline_probability": 0.040,
+      "error_sensitivity_slope": 2.50,
+      "forklift_slack_low_bound_sec": 1.5,
+      "forklift_slack_high_bound_sec": 3.5,
+
+      "convective_heat_load_mean_w": 2950.0,
+      "convective_heat_load_scale_w": 442.5,
+      "convective_heat_load_low_w": 1475.0,
+      "convective_heat_load_high_w": 4425.0
+    }
+  ],
+
+  "supervisor_workforce_roster": [
+    { "day_of_week": 0, "door_code": 0, "supervisor_name": "Weekend Supervisor - Internal",
+      "base_carelessness_factor": 1.05, "fatigue_sensitivity_scale": 0.35,
+      "error_sensitivity_slope": 0.70, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 },
+    { "day_of_week": 0, "door_code": 1, "supervisor_name": "Weekend Supervisor - External",
+      "base_carelessness_factor": 1.05, "fatigue_sensitivity_scale": 0.35,
+      "error_sensitivity_slope": 0.70, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 },
+    { "day_of_week": 1, "door_code": 0, "supervisor_name": "Weekday Supervisor - Internal",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 1, "door_code": 1, "supervisor_name": "Weekday Supervisor - External",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 2, "door_code": 0, "supervisor_name": "Weekday Supervisor - Internal",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 2, "door_code": 1, "supervisor_name": "Weekday Supervisor - External",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 3, "door_code": 0, "supervisor_name": "Weekday Supervisor - Internal",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 3, "door_code": 1, "supervisor_name": "Weekday Supervisor - External",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 4, "door_code": 0, "supervisor_name": "Weekday Supervisor - Internal",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 4, "door_code": 1, "supervisor_name": "Weekday Supervisor - External",
+      "base_carelessness_factor": 1.01, "fatigue_sensitivity_scale": 0.15,
+      "error_sensitivity_slope": 0.40, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.0 },
+    { "day_of_week": 5, "door_code": 0, "supervisor_name": "Friday Supervisor - Internal",
+      "base_carelessness_factor": 1.04, "fatigue_sensitivity_scale": 0.30,
+      "error_sensitivity_slope": 0.60, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 },
+    { "day_of_week": 5, "door_code": 1, "supervisor_name": "Friday Supervisor - External",
+      "base_carelessness_factor": 1.04, "fatigue_sensitivity_scale": 0.30,
+      "error_sensitivity_slope": 0.60, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 },
+    { "day_of_week": 6, "door_code": 0, "supervisor_name": "Weekend Supervisor - Internal",
+      "base_carelessness_factor": 1.05, "fatigue_sensitivity_scale": 0.35,
+      "error_sensitivity_slope": 0.70, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 },
+    { "day_of_week": 6, "door_code": 1, "supervisor_name": "Weekend Supervisor - External",
+      "base_carelessness_factor": 1.05, "fatigue_sensitivity_scale": 0.35,
+      "error_sensitivity_slope": 0.70, "forklift_slack_low_bound_sec": 0.5, "forklift_slack_high_bound_sec": 1.2 }
+  ],
+
+  "crop_variety_parameters": [
+    {
+      "fruit_type_code": 0,
+      "fruit_name": "blueberry",
+      "base_quality_grade_distribution_probs": [0.75, 0.18, 0.07],
+      "base_customer_required_grade_probs": [0.80, 0.15, 0.05],
+
+      "historical_monthly_weights": [
+        0.32, 0.26, 0.13, 0.10, 0.12, 0.25,
+        0.50, 0.85, 1.15, 1.40, 1.30, 0.95
+      ],
+      "historical_yearly_trend_weights": {
+        "2022": 1.00, "2023": 1.04, "2024": 0.60, "2025": 1.18, "2026": 1.17
+      },
+
+      "scheduler_base_probability_urgent_ship": 0.15,
+      "scheduler_base_probability_partial_batch": 0.10,
+      "standard_ramp_up_duration_hrs": 4.0,
+
+      "door_lock_threshold_temp_c": 0.5,
+
+      "rh_deadband_reference_fraction": 0.03,
+
+      "chilling_injury_threshold_c": null,
+      "freezing_injury_threshold_c": -1.1,
+      "heat_risk_threshold_c": 4.0,
+
+      "target_retention_limit_days": 14.0,
+      "biological_shelf_life_days": 21.0,
+
+      "specific_heat_capacity_j_kg_k": 3640.0,
+
+      "respiratory_quotient_co2_prod_to_o2_cons": 1.0,
+      "respiration_heat_j_mg_co2": 10.7,
+
+      "tunnel_exit_temperature_reference_c": -0.7,
+      "tunnel_exit_temperature_drift_delta_k": 1.0,
+      "tunnel_exit_temperature_scale_delta_k": 0.4,
+      "tunnel_exit_temperature_max_decrease_delta_k": 0.5,
+      "tunnel_exit_temperature_max_increase_delta_k": 1.5,
+
+      "thermal_conductance_k_zone_low": 1.6e-5,
+      "thermal_conductance_k_zone_high": 3.2e-5,
+      "bulk_batch_fruit_coupling_k_constant": 2.4e-6,
+      "thermal_conductance_movement_multiplier": 1.22,
+
+      "gross_rho_load_bulk_kg_m3": 169.0,
+
+      "transpiration_coefficient_k_p": 2.5e-10,
+      "refrigeration_target_t_setpoint_c": 0.0,
+      "refrigeration_target_rh_setpoint_fraction": 0.925,
+
+      "oxygen_affinity_fraction_km": 0.025,
+      "carbon_dioxide_inhibition_ppm": 45000.0,
+
+      "internal_arrival_baseline_probability": 0.90,
+      "case_picking_handling_mean_ms": 500.0,
+      "case_picking_handling_shape": 2.0,
+      "quality_distribution_sensitivity_multiplier": 0.10,
+      "customer_quality_sensitivity_multiplier": 0.12,
+
+      "pallet_max_unit_boxes_capacity": 180,
+      "box_packaging_tare_mass_kg": 0.5,
+      "box_packaging_specific_heat_j_kg_k": 1650.0,
+      "pallet_structural_base_tare_mass_kg": 16.0,
+      "pallet_base_specific_heat_j_kg_k": 1900.0,
+
+      "pallet_retrieval_delay_mean_sec": 10.0,
+      "pallet_retrieval_delay_shape": 3.0,
+
+      "box_net_fruit_mass_mean_kg": 2.03,
+      "box_net_fruit_mass_scale_kg": 0.03,
+      "box_net_fruit_mass_legal_minimum_kg": 1.98,
+
+      "scheduler_min_shipment_mass_kg": 400.0,
+      "scheduler_min_arrived_mass_kg": 100.0,
+      "scheduler_max_inventory_capacity_kg": 40000.0,
+      "scheduler_arrival_volume_scale": 290.0,
+      "scheduler_shipment_volume_scale": 330.0,
+      "scheduler_arrival_volume_shape": 2.0,
+      "scheduler_shipment_volume_shape": 2.0,
+      "scheduler_dispatch_mass_multiple_kg": 365.4,
+      "scheduler_inventory_pallet_capacity": 100,
+
+      "scheduler_orders_per_day_multiplier": 0.40,
+      "scheduler_max_moves_per_pallet_day": 5.5,
+      "scheduler_safety_buffer": 1.8,
+
+      "market_volatility_scale": 0.25,
+      "local_market_correlation": 0.40
+    },
+    {
+      "fruit_type_code": 1,
+      "fruit_name": "avocado",
+      "base_quality_grade_distribution_probs": [0.70, 0.22, 0.08],
+      "base_customer_required_grade_probs": [0.75, 0.20, 0.05],
+      
+      "historical_monthly_weights": [
+        0.18, 0.22, 0.38, 0.65, 1.20, 1.40,
+        1.40, 1.20, 0.60, 0.30, 0.15, 0.10
+      ],
+      "historical_yearly_trend_weights": {
+        "2022": 1.00, "2023": 1.40, "2024": 1.25, "2025": 1.73, "2026": 1.83
+      },
+
+      "scheduler_base_probability_urgent_ship": 0.15,
+      "scheduler_base_probability_partial_batch": 0.10,
+      "standard_ramp_up_duration_hrs": 4.0,
+
+      "door_lock_threshold_temp_c": 6.0,
+
+      "rh_deadband_reference_fraction": 0.03,
+      "chilling_injury_threshold_c": 3.0,
+      "freezing_injury_threshold_c": null,
+      "heat_risk_threshold_c": 12.0,
+
+      "target_retention_limit_days": 21.0,
+      "biological_shelf_life_days": 35.0,
+
+      "specific_heat_capacity_j_kg_k": 3010.0,
+
+      "respiratory_quotient_co2_prod_to_o2_cons": 0.7,
+      "respiration_heat_j_mg_co2": 12.5,
+
+      "tunnel_exit_temperature_reference_c": 5.5,
+      "tunnel_exit_temperature_drift_delta_k": 0.3,
+      "tunnel_exit_temperature_scale_delta_k": 1.2,
+      "tunnel_exit_temperature_max_decrease_delta_k": 1.8,
+      "tunnel_exit_temperature_max_increase_delta_k": 4.2,
+
+      "thermal_conductance_k_zone_low": 1.0e-5,
+      "thermal_conductance_k_zone_high": 2.0e-5,
+      "bulk_batch_fruit_coupling_k_constant": 1.5e-6,
+      "thermal_conductance_movement_multiplier": 1.22,
+
+      "gross_rho_load_bulk_kg_m3": 421.0,
+
+      "transpiration_coefficient_k_p": 4.0e-10,
+      "refrigeration_target_t_setpoint_c": 5.5,
+      "refrigeration_target_rh_setpoint_fraction": 0.925,
+
+      "oxygen_affinity_fraction_km": 0.030,
+      "carbon_dioxide_inhibition_ppm": 75000.0,
+
+      "internal_arrival_baseline_probability": 0.85,
+      "case_picking_handling_mean_ms": 750.0,
+      "case_picking_handling_shape": 2.0,
+      "quality_distribution_sensitivity_multiplier": 0.15,
+      "customer_quality_sensitivity_multiplier": 0.18,
+
+      "pallet_max_unit_boxes_capacity": 80,
+      "box_packaging_tare_mass_kg": 1.2,
+      "box_packaging_specific_heat_j_kg_k": 1500.0,
+      "pallet_structural_base_tare_mass_kg": 25.0,
+      "pallet_base_specific_heat_j_kg_k": 1700.0,
+
+      "pallet_retrieval_delay_mean_sec": 12.0,
+      "pallet_retrieval_delay_shape": 3.0,
+
+      "box_net_fruit_mass_mean_kg": 11.38,
+      "box_net_fruit_mass_scale_kg": 0.12,
+      "box_net_fruit_mass_legal_minimum_kg": 11.2,
+
+      "scheduler_min_shipment_mass_kg": 500.0,
+      "scheduler_min_arrived_mass_kg": 500.0,
+      "scheduler_max_inventory_capacity_kg": 100000.0,
+      "scheduler_arrival_volume_scale": 79.0,
+      "scheduler_shipment_volume_scale": 144.0,
+      "scheduler_arrival_volume_shape": 2.0,
+      "scheduler_shipment_volume_shape": 2.0,
+      "scheduler_dispatch_mass_multiple_kg": 910.4,
+      "scheduler_inventory_pallet_capacity": 110,
+
+      "scheduler_orders_per_day_multiplier": 0.20,
+      "scheduler_max_moves_per_pallet_day": 3.5,
+      "scheduler_safety_buffer": 1.5,
+
+      "market_volatility_scale": 0.35,
+      "local_market_correlation": 0.20
+    }
+  ],
+
+  "dispatch_types" : [
+    {"code": -1, "name": "spoilage dump"},
+    {"code": 0, "name": "force clearing"},
+    {"code": 1, "name": "regular"}
+  ]
+}

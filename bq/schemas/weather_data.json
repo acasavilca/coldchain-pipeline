@@ -1,0 +1,53 @@
+[
+  {
+    "name": "location_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "temperature_2m_c",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "relative_humidity_2m_pct",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "dewpoint_2m_c",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "shortwave_radiation_wm2",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "wind_speed_10m_ms",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "surface_pressure_hpa",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "soil_temperature_54cm_c",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "loaded_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  }
+]

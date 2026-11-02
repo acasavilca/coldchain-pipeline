@@ -1,6 +1,0 @@
-id: purge_ram_cache
-namespace: chao_cold_storage
-
-tasks:
-  - id: purge_ram_cache
-    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles

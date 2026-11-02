@@ -1,0 +1,5 @@
+location_id,region,country_name,country_code,latitude,longitude,iana_timezone
+1,Chao (Virú Valley),Peru,PE,-8.5771,-78.5661,America/Lima
+2,Ica (Villacurí Valley),Peru,PE,-14.0678,-75.7286,America/Lima
+3,Chincha,Peru,PE,-13.4167,-76.1333,America/Lima
+4,Arequipa (Majes / Pedregal Valley),Peru,PE,-16.3235,-72.2081,America/Lima

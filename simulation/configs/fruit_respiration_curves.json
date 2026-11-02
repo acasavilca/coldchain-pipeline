@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "units": "mg CO2 / kg / h",
+    "source": "USDA respiration table transcription from provided images",
+    "notes": {
+      "nd": null,
+      "lt_prefix": "value reported as an upper bound, e.g. '<10'"
+    }
+  },
+  "data": {
+    "apple_fall": {
+      "0": 3,
+      "5": 6,
+      "10": 9,
+      "15": 15,
+      "20": 20,
+      "25": null
+    },
+    "apple_summer": {
+      "0": 5,
+      "5": 8,
+      "10": 17,
+      "15": 25,
+      "20": 31,
+      "25": null
+    },
+    "avocado": {
+      "0": null,
+      "5": 35,
+      "10": 105,
+      "15": null,
+      "20": 190,
+      "25": null
+    },
+    "blackberry": {
+      "0": 19,
+      "5": 36,
+      "10": 62,
+      "15": 75,
+      "20": 115,
+      "25": null
+    },
+    "blueberry": {
+      "0": 6,
+      "5": 11,
+      "10": 29,
+      "15": 48,
+      "20": 70,
+      "25": 101
+    },
+    "grape_american": {
+      "0": 3,
+      "5": 6,
+      "10": 8,
+      "15": 16,
+      "20": 33,
+      "25": 39
+    },
+    "grape_muscadine": {
+      "0": 10,
+      "5": 13,
+      "10": null,
+      "15": null,
+      "20": 51,
+      "25": null
+    },
+    "grape_table": {
+      "0": 3,
+      "5": 7,
+      "10": 13,
+      "15": null,
+      "20": 27,
+      "25": null
+    },
+    "grapefruit": {
+      "0": null,
+      "5": null,
+      "10": null,
+      "15": null,
+      "20": null,
+      "25": null
+    },
+    "mandarin_tangerine": {
+      "0": null,
+      "5": 6,
+      "10": 8,
+      "15": 16,
+      "20": 25,
+      "25": null
+    },
+    "mango": {
+      "0": null,
+      "5": 16,
+      "10": 35,
+      "15": 58,
+      "20": 113,
+      "25": null
+    },
+    "nectarine_ripe": {
+      "0": 5,
+      "5": null,
+      "10": 20,
+      "15": null,
+      "20": 87,
+      "25": null
+    },
+    "papaya_ripe": {
+      "0": null,
+      "5": 5,
+      "10": null,
+      "15": 19,
+      "20": 80,
+      "25": null
+    },
+    "passion_fruit": {
+      "0": null,
+      "5": 44,
+      "10": 59,
+      "15": 141,
+      "20": 262,
+      "25": null
+    },
+    "peach_ripe": {
+      "0": 5,
+      "5": null,
+      "10": 20,
+      "15": null,
+      "20": 87,
+      "25": null
+    },
+    "strawberry": {
+      "0": 16,
+      "5": null,
+      "10": 75,
+      "15": null,
+      "20": 150,
+      "25": null
+    },
+    "watermelon": {
+      "0": null,
+      "5": 4,
+      "10": 8,
+      "15": null,
+      "20": 21,
+      "25": null
+    },
+    "pomegranate": {
+      "0": null,
+      "5": 6,
+      "10": 12,
+      "15": null,
+      "20": 24,
+      "25": null
+    }
+  },
+  "annotations": {
+    "grapefruit": {
+      "15": {
+        "kind": "upper_bound",
+        "value": 10,
+        "raw": "<10"
+      }
+    }
+  }
+}
+

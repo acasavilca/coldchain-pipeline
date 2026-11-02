@@ -1,0 +1,3 @@
+compressor_model_code,refrigerant_code,refrigerant_name,rated_superheat_k,rated_subcooling_k
+MTZ160HW4AVE,0,R404A,10.0,0.0
+MTZ160HW4AVE,1,R134a,10.0,0.0

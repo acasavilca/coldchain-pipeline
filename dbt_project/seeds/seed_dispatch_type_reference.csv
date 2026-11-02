@@ -1,0 +1,4 @@
+dispatch_type_code,dispatch_type_name
+-1,spoilage dump
+0,force clearing
+1,regular

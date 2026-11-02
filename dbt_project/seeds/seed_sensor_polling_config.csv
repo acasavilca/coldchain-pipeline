@@ -1,0 +1,17 @@
+tag_name,expected_polling_interval_sec
+t_room_c,1.0
+rh_room_frac,0.1
+t_suction_line_c,1.0
+p_suction_line_bar,0.1
+t_liquid_line_c,1.0
+p_liquid_line_bar,0.1
+compressor_power_w,1.0
+t_room_air_return_c,1.0
+t_room_air_supply_c,1.0
+rh_room_air_supply_frac,0.1
+co2_ppm,5.0
+o2_pct,5.0
+t_coil_evap_c,1.0
+evap_air_velocity_m_s,1.0
+t_pulp_c,600.0
+mass_kg,600.0
