@@ -7,7 +7,7 @@ Fruit respiration curves and quality-grade sampling.
 import math
 import numpy as np
 import pandas as pd
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *
@@ -44,7 +44,7 @@ def get_respiration_curve(respiration_database, fruit_type):
     return np.asarray(T_lookup[mask], dtype=float), np.asarray(R_lookup[mask], dtype=float)
 
 
-@njit(cache=True)
+@njit(fastmath=False)
 def get_t_ref(T, T_min, T_max):
     mid = (T_min + T_max) / 2
 
@@ -67,7 +67,7 @@ def get_t_ref(T, T_min, T_max):
     return best_t
 
 
-@njit(cache=True)
+@njit
 def get_fruit_respiration_parameters(T_lookup, R_lookup):
     order = np.argsort(T_lookup)
     T = T_lookup[order]
@@ -90,7 +90,7 @@ def get_fruit_respiration_parameters(T_lookup, R_lookup):
     return T, R, T_min, T_max, T_lo, T_hi, T_ref, Q_10, R_ref
 
 
-@njit(cache=True)
+@njit
 def calc_respiration_rate_mg_co2_per_kg_fruit_hr(T_pulp, T, R, T_min, T_max, T_lo, T_hi, T_ref, R_ref, Q_10):
     idx = np.searchsorted(T, T_pulp)
 
@@ -109,7 +109,7 @@ def calc_respiration_rate_mg_co2_per_kg_fruit_hr(T_pulp, T, R, T_min, T_max, T_l
     return R_fruit
 
 
-@njit(cache=True)
+@njit
 def draw_fruit_quality_grade(
     seasonal_weight_factor,
     base_quality_probabilities,
@@ -168,7 +168,7 @@ def draw_fruit_quality_grade(
 
     return sampled_grade
 
-@njit(cache=True)
+@njit
 def compute_market_scarcity_matrix(
     rng,
     historical_yield_matrix,

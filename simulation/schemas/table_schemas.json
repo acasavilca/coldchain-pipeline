@@ -42,7 +42,8 @@
     "dtypes": {
       "location_id": "int64",
       "timestamp_ms": "int64",
-      "is_active": "bool"
+      "is_active": "bool",
+      "switch_reason": "int64"
     },
     "datetime_cols": []
   },

@@ -1,5 +1,5 @@
 import math
-from numba import njit
+from jit import njit
 
 from matrix_index_maps import *
 from constants import *

@@ -1,0 +1,6 @@
+compressor_switch_reason_code,compressor_switch_reason_name,compressor_switch_reason_description
+0,thermostat,Thermostat call or satisfied (also every compressor start)
+1,defrost,Forced off during defrost wait-for-stop or settle
+2,downtime,Scheduled downtime shutdown
+-1,low_pressure_trip,Low-pressure trip
+-2,airflow_interlock,Evaporator airflow interlock opened

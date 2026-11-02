@@ -619,9 +619,39 @@
     }
   ],
 
+  "nullifier_rates": {
+    "hardwired": {
+      "background_rate_per_hour": 0.001,
+      "channel_outages_per_week": 0.03,
+      "channel_outage_mean_duration_min": 240
+    },
+    "wireless": {
+      "background_rate_per_hour": 0.15,
+      "channel_outages_per_week": 0.35,
+      "channel_outage_mean_duration_min": 720
+    },
+    "facility_wide": {
+      "facility_outages_per_week": 0.15,
+      "facility_outage_mean_duration_min": 45
+    }
+  },
+
   "dispatch_types" : [
     {"code": -1, "name": "spoilage dump"},
     {"code": 0, "name": "force clearing"},
     {"code": 1, "name": "regular"}
+  ],
+
+  "compressor_switch_reasons": [
+    {"code": 0, "name": "thermostat", "description": "Thermostat call or satisfied (also every compressor start)"},
+    {"code": 1, "name": "defrost", "description": "Forced off during defrost wait-for-stop or settle"},
+    {"code": 2, "name": "downtime", "description": "Scheduled downtime shutdown"},
+    {"code": -1, "name": "low_pressure_trip", "description": "Low-pressure trip"},
+    {"code": -2, "name": "airflow_interlock", "description": "Evaporator airflow interlock opened"}
+  ],
+
+  "defrost_termination_reasons": [
+    {"code": 1, "name": "probe", "description": "Coil probe reached termination temperature"},
+    {"code": 2, "name": "timeout", "description": "Maximum heat time reached"}
   ]
 }

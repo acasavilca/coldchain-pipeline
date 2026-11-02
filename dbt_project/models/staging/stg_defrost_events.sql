@@ -14,13 +14,8 @@ renamed as (
         timestamp_millis(cast(start_timestamp_ms as int64)) as defrost_start_ts,
         cast(loaded_at as timestamp) as ingested_at,
 
-        -- termination: 1 = coil probe reached termination temperature,
-        -- 2 = max heat time reached (see simulation/constants.py DF_TERMINATION_*)
+        -- termination code only; decoded in the marts via seed_defrost_termination_reason_reference
         cast(termination_reason as int64) as termination_reason_code,
-        case cast(termination_reason as int64)
-            when 1 then 'probe'
-            when 2 then 'timeout'
-        end as termination_reason,
 
         -- ice removed during the cycle (grams)
         cast(ice_melted_g as int64) as ice_melted_g,

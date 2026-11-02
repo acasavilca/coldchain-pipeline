@@ -341,6 +341,16 @@ def generate_dispatch_type_seed(facility_cfg: dict, out_dir: Path):
     ]
     write_csv(out_dir / "seed_dispatch_type_reference.csv", ["dispatch_type_code", "dispatch_type_name"], rows)
 
+def generate_reason_seeds(facility_cfg: dict, out_dir: Path):
+    for key, stem in (("compressor_switch_reasons", "compressor_switch_reason"),
+                      ("defrost_termination_reasons", "defrost_termination_reason")):
+        rows = [
+            {f"{stem}_code": r["code"], f"{stem}_name": r["name"], f"{stem}_description": r["description"]}
+            for r in facility_cfg[key]
+        ]
+        write_csv(out_dir / f"seed_{stem}_reference.csv",
+                  [f"{stem}_code", f"{stem}_name", f"{stem}_description"], rows)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--facility-config", type=Path, default=Path("configs/facility_runtime_config.json"))
@@ -364,6 +374,7 @@ def main():
     generate_driver_seed(facility_cfg, args.out_dir)
     generate_door_seed(facility_cfg, args.out_dir)
     generate_dispatch_type_seed(facility_cfg, args.out_dir)
+    generate_reason_seeds(facility_cfg, args.out_dir)
 
 if __name__ == "__main__":
     main()

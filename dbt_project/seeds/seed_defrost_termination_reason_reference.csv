@@ -1,0 +1,3 @@
+defrost_termination_reason_code,defrost_termination_reason_name,defrost_termination_reason_description
+1,probe,Coil probe reached termination temperature
+2,timeout,Maximum heat time reached

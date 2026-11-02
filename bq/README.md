@@ -15,3 +15,6 @@ bash bq/load_chunks.sh --weather  # (re)load the weather table from simulation/r
 inbound/outbound tables). They must match `simulation/schemas/table_schemas.json` plus the
 `event_timestamp` and `loaded_at` columns the pipeline adds, so update both together when a raw
 table changes.
+
+After a schema change (for example the `switch_reason` column on `compressor_events`), rerun
+`bash bq/create_tables.sh` before loading. It recreates the tables, so reload your chunks afterwards.

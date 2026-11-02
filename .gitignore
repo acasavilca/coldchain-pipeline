@@ -36,15 +36,17 @@ simulation/validation/
 *.h5
 *.feather
 
-# simulator state (recreated on the first run; delete both to cold-start)
+# simulator state and generated build artifacts (recreated on the first run)
 state.npz
 rng_state.json
+refrigerants_key_resolver.json
 
 # python / numba caches
 __pycache__/
 *.pyc
 *.nbi
 *.nbc
+.numba_cache/
 .ipynb_checkpoints/
 .pytest_cache/
 .venv/

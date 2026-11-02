@@ -5,7 +5,7 @@ The refrigeration cycle itself: rated hardware constants, compressor performance
 """
 
 import math
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *
@@ -642,14 +642,14 @@ def update_refrigeration_state(
     cooling_frac = room_state_float64_vector[IDX_ROOM_STATE_COOLING_FRACTION]
     downtime_safe_for_shutdown = room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_DOWNTIME_SAFE_FOR_SHUTDOWN]
     lp_tripped_prev = room_state_int64_vector[IDX_ROOM_STATE_LP_TRIPPED]
-    switch_reason = 0
+    switch_reason = SWITCH_REASON_CONTROL
 
     # Apply the flow-switch interlock every step, including between thermostat
     # polls; the permit includes the intentional fan-delay and release grace.
     if compressor_on and not evap_airflow_ok:
         compressor_on = 0
         room_state_int64_vector[IDX_ROOM_STATE_LAST_COMPRESSOR_SWITCH_OFF_MS] = epoch_timestamp_ms
-        switch_reason = -2
+        switch_reason = SWITCH_REASON_AIRFLOW_LOSS
 
     if epoch_timestamp_ms % equipment_configurations_int64_vector[IDX_EQ_REFRIG_CONTROL_EVALUATION_INTERVAL_MS] == 0:
         # State variables
@@ -698,7 +698,7 @@ def update_refrigeration_state(
             if room_state_int64_vector[IDX_ROOM_STATE_LP_TRIPPED]:
                 compressor_on = 0
                 room_state_int64_vector[IDX_ROOM_STATE_LAST_COMPRESSOR_SWITCH_OFF_MS] = epoch_timestamp_ms
-                switch_reason = -1
+                switch_reason = SWITCH_REASON_LP_TRIP
             elif (
                 not room_state_int64_vector[IDX_ROOM_STATE_THERMOSTAT_CALL]
                 or defrost_phase in (DF_WAIT_FOR_STOP, DF_SETTLE)
@@ -707,6 +707,10 @@ def update_refrigeration_state(
                 if epoch_timestamp_ms - room_state_int64_vector[IDX_ROOM_STATE_LAST_COMPRESSOR_SWITCH_ON_MS] >= compressor_minimum_active_time_ms:
                     compressor_on = 0
                     room_state_int64_vector[IDX_ROOM_STATE_LAST_COMPRESSOR_SWITCH_OFF_MS] = epoch_timestamp_ms
+                    if defrost_phase in (DF_WAIT_FOR_STOP, DF_SETTLE):
+                        switch_reason = SWITCH_REASON_DEFROST
+                    elif downtime_safe_for_shutdown:
+                        switch_reason = SWITCH_REASON_DOWNTIME
 
         if lp_tripped_prev != room_state_int64_vector[IDX_ROOM_STATE_LP_TRIPPED]:
             row = room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_LP_TRIP_EVENT_WRITE_IDX]

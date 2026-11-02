@@ -61,6 +61,14 @@ DF_FAN_DELAY     = 5
 DF_TERMINATION_PROBE   = 1
 DF_TERMINATION_TIMEOUT = 2
 
+# Compressor switch reasons (compressor_event_ledger, IDX_COMPRESSOR_EVENT_SWITCH_REASON).
+# Decoded downstream through seeds generated from facility_runtime_config.json.
+SWITCH_REASON_CONTROL        = 0   # thermostat call / satisfied (also every start)
+SWITCH_REASON_DEFROST        = 1   # forced off during defrost wait-for-stop / settle
+SWITCH_REASON_DOWNTIME       = 2   # scheduled downtime shutdown
+SWITCH_REASON_LP_TRIP        = -1  # low-pressure trip
+SWITCH_REASON_AIRFLOW_LOSS   = -2  # evaporator airflow interlock
+
 
 # cfm -> m3/s : 1 cfm = 0.000471947 m3/s
 CFM_TO_M3S = 0.000471947

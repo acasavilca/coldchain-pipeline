@@ -1,285 +1,263 @@
+#!/usr/bin/env python3
 """
-run.py
+run.py -- command-line entry point for one chunk of simulated time.
 
-Final, non-debug entry point for a simulation run. This is new_run.py with
-the debugging cruft (matplotlib, the stop() cell-killer, the post-run
-downtime-spike inspection loop) stripped out -- everything below is setup
-that feeds into a single run_simulator() call.
+Each call simulates ``--hours`` of plant operation, continuing from the state
+saved by the previous call (state.npz + rng_state.json in --run-dir), or
+cold-starting at ``--start-date`` when no state exists. It then writes:
+
+    <run-dir>/state.npz, rng_state.json         resume point for the next call
+    <run-dir>/run_outputs/run_outputs_chunk_NNNN.npz   raw simulator arrays
+    <run-dir>/raw_parquets/chunk_NNNN/*.parquet        the raw tables loaded into BigQuery
+
+Examples
+    python run.py                               # 72 h, continue or cold-start
+    python run.py --hours 168 --fruit avocado --refrigerant r134a   # cold start only
+    python run.py --smoke-test                  # 4 simulated minutes, writes nothing
+    python run.py --no-cache                    # ignore the numba compilation cache
+    python run.py --clear-cache --smoke-test    # wipe the cache, recompile, exit
+
+Numba caching: compiled functions are cached in ``.numba_cache/<hash>``, where
+the hash covers every simulator source and config file, so editing any of them
+recompiles automatically. --no-cache / --clear-cache exist as escape hatches.
 """
-
+import argparse
+import os
 import sys
 import time
 from pathlib import Path
-import numpy as np
-import pandas as pd
-from zoneinfo import ZoneInfo
 
-from constants import *
-from matrix_index_maps import *
-from time_calendar import get_iana_timezone, _to_epoch_ms, _to_datetime_str
-from array_builders import (
-    load_json_files,
-    build_all_parameter_arrays,
-    build_ephemeral_arrays,
-)
-from run_setup import (
-    retrieve_satellite_data,
-    prepare_forcing_arrays,
-    join_downtimes,
-    initialize_first_run_state,
-    process_schedules,
-    enforce_dtypes,
-    fix_timestamps,
-)
-from engine import run_simulator
-from state_persistence import save_run_state, load_run_state
-from run_outputs_io import save_run_outputs, trim_run_outputs, _find_chunks
-from scadafier import scadafy_all_outputs
-from nullifier import nullify_telemetry
+SIM_DIR = Path(__file__).resolve().parent
 
-RUN_DUMMY = 0
+DEFAULT_HOURS = 72
+DEFAULT_START_DATE = "2025-05-01T03:00:00"   # local time at the facility; cold start only
+SMOKE_TEST_DEFAULT_MINUTES = 4
 
-NUM_SIMUL_HOURS = 24 * 3 # 24*7 + 4
-
-STARTING_FRUIT_TYPE = FRUIT_TYPE_BLUEBERRY # FRUIT_TYPE_BLUEBERRY FRUIT_TYPE_AVOCADO
-STARTING_REFRIGERANT = REFRIGERANT_R404A # REFRIGERANT_R404A REFRIGERANT_R134A
-
-SEND_REQUEST = 0
-
-if RUN_DUMMY:
-    SEND_REQUEST = 0
-
-# Load configs and databases
-configs = load_json_files("./configs")
-facility_cfg      = configs["facility_runtime_config"]
-equipment_catalog = configs["catalog_equipment_config"]
-respiration_db    = configs["fruit_respiration_curves"]
-
-schemas = load_json_files("./schemas")
-table_schemas = schemas["table_schemas"]
-
-active_location_id = facility_cfg["facility_location"]["active_location_id"]
-location = facility_cfg["facility_location"]["locations"][str(active_location_id)]
-runtime_settings = facility_cfg["simulation_runtime_settings"]
-
-# Resume from a previous run's saved state if it exists, else cold-start.
-resumed = load_run_state()
-if resumed is not None:
-    state_arrays, rng = resumed
-    saved_float_count = state_arrays["room_state_float64_vector"].size
-    saved_int_count = state_arrays["room_state_int64_vector"].size
-    if saved_float_count != N_ROOM_STATE_FLOAT64_FIELDS or saved_int_count != N_ROOM_STATE_INT64_FIELDS:
-        raise ValueError(
-            "Saved room-state vectors have obsolete lengths "
-            f"({saved_float_count} float, {saved_int_count} int); current layout needs "
-            f"({N_ROOM_STATE_FLOAT64_FIELDS} float, {N_ROOM_STATE_INT64_FIELDS} int). "
-            "Use a fresh state or explicitly migrate this checkpoint."
-        )
-    print("Resuming from saved state.npz / rng_state.json.")
-else:
-    rng = np.random.default_rng(runtime_settings["rng_seed"])
-    state_arrays = None  # built below, after parameter_arrays exist
-
-iana_tz_str = get_iana_timezone(location["latitude"] , location["longitude"])
-tz_obj = ZoneInfo(iana_tz_str)
-
-# START_LOCAL_DATE only matters for the very first run ever (Kestra's
-# "start of operations" parameter, cold-start only) -- every run after that
-# must continue from exactly where the previous run's state left off, not
-# from a re-typed date. Local dates/timezone only get used internally
-# (fatigue factors, supervisor schedules); everything else runs on epoch ms
-# and stays timezone-agnostic all the way to the marts.
-START_LOCAL_DATE = "2025-05-01T03:00:00" # "2025-09-29T03:00:00" # "2025-05-01T03:00:00" # "2024-12-30T00:00:00"
-
-if resumed is not None:
-    start_ms = int(state_arrays["room_state_int64_vector"][IDX_ROOM_STATE_EPOCH_TIMESTAMP_MS])
-else:
-    start_ms = _to_epoch_ms(str(START_LOCAL_DATE), tz_obj)
-end_ms = int(start_ms + MS_PER_HOUR * NUM_SIMUL_HOURS)
-
-WEATHER_FILE_PATH = "weather_data.parquet"
-
-print("start:", _to_datetime_str(start_ms), "\n", "end:", _to_datetime_str(end_ms))
-if SEND_REQUEST:
-    weather_data_df, raw_weather_data_df = retrieve_satellite_data(    
-        rng                = rng,    
-        start_epoch_ms     = start_ms,    
-        end_epoch_ms       = end_ms,    
-        measurements       = runtime_settings["required_weather_measurements"],
-        active_location_id = active_location_id,
-        facility_cfg       = facility_cfg,
-        table_schema       = table_schemas,
-      )
-
-    weather_data_df.to_parquet(WEATHER_FILE_PATH, engine="pyarrow")
-    raw_weather_data_df.to_parquet("raw_weather_data.parquet", engine="pyarrow")
-else:
-    weather_data_df = pd.read_parquet(WEATHER_FILE_PATH, engine="pyarrow")
-
-if RUN_DUMMY:
-    end_ms = start_ms + int(4 * 60e3)
-
-forcing_data, weather_resampled_df = prepare_forcing_arrays(
-    sim_start_ms = start_ms,
-    sim_end_ms   = end_ms,
-    facility_cfg = facility_cfg,
-    weather_data = weather_data_df, # type: ignore
-)
-
-print(weather_resampled_df)
-# print(forcing_data["forcing_matrix"][:, IDX_FORCING_AMBIENT_RH_FRAC])
-print("start:", _to_datetime_str(start_ms), "\n", "end:", _to_datetime_str(end_ms))
-parameter_arrays = build_all_parameter_arrays(
-    facility_cfg      = facility_cfg,
-    equipment_catalog = equipment_catalog,
-    respiration_db    = respiration_db,
-)
-print(parameter_arrays["equipment_configurations_int64_vector"])
-ephemeral_arrays = build_ephemeral_arrays(
-    start_ms,
-    end_ms,
-    parameter_arrays["base_quality_grade_probs_matrix"],
-    facility_cfg,
-)
-if state_arrays is None:
-    state_arrays = initialize_first_run_state(
-        rng,
-        start_ms,
-        forcing_data["forcing_matrix"],
-        parameter_arrays["room_configurations_float64_vector"],
-        parameter_arrays["equipment_configurations_float64_vector"],
-        parameter_arrays["equipment_configurations_int64_vector"],
-        parameter_arrays["fruit_parameters_float64_matrix"],
-        parameter_arrays["fruit_parameters_int64_matrix"],
-        parameter_arrays["refrigerant_properties_matrix"],
-        parameter_arrays["refrigerant_surfaces_matrix"],
-        parameter_arrays["historical_yield_matrix"],
-        parameter_arrays["base_quality_grade_probs_matrix"],
-        parameter_arrays["fruit_respiration_curves_matrix"],
-        ephemeral_arrays["room_ephemeral_int64_vector"],
-        ephemeral_arrays["crop_rotation_event_ledger"],
-        ephemeral_arrays["refrigerant_rotation_event_ledger"],
-        starting_crop_row=STARTING_FRUIT_TYPE,
-        starting_refrigerant_row=STARTING_REFRIGERANT,
-        magnus_const_set=ALDUCHOV_LIQ_CONST_SET,
-    )
-
-# join_downtimes() already folds any leftover rows saved in state.npz
-# (downtime_timestamps_ms_vec / valid_crop_rotation_timestamps_ms_vec /
-# valid_refrigerant_rotation_timestamps_ms_vec, written by save_run_state()
-# at the end of a prior run) in with today's config-declared schedule.
-input_schedule_arrays = join_downtimes(facility_cfg)
-
-# process_schedules() used to run inside run_simulator(), which meant its
-# three outputs never left the njit function's local scope. Calling it here
-# instead lets us assign its outputs straight into state_arrays -- so
-# run_simulator gets them via **state_arrays like everything else (no
-# separate kwargs, no return statement needed: run_simulator mutates these
-# in place same as every other state array), and save_run_state() below
-# just persists the one dict.
-(
-    state_arrays["downtime_timestamps_ms_vector"],
-    state_arrays["valid_crop_rotation_timestamps_ms_vector"],
-    state_arrays["valid_refrigerant_rotation_timestamps_ms_vector"],
-) = process_schedules(
-    input_schedule_arrays["input_downtime_timestamps_ms_matrix"],
-    input_schedule_arrays["input_crop_rotation_timestamps_ms_vector"],
-    input_schedule_arrays["input_refrigerant_rotation_timestamps_ms_vector"],
-    state_arrays["room_state_int64_vector"],
-    ephemeral_arrays["room_ephemeral_int64_vector"],
-    parameter_arrays["room_configurations_int64_vector"],
-    start_ms,
-    end_ms,
-    parameter_arrays["room_configurations_int64_vector"][IDX_ROOM_CFG_DT_ENGINE_MS],
-)
-
-start_time = time.perf_counter()
-run_simulator(
-    **state_arrays,
-    **forcing_data,
-    **parameter_arrays,
-    **ephemeral_arrays,
-    sim_end_epoch_ms=end_ms,
-    rng=rng,
-)
-end_time = time.perf_counter()
-execution_time = end_time - start_time
-
-print(f"Execution time: {execution_time:.6f} seconds. Simulated hours: {NUM_SIMUL_HOURS}")
-if RUN_DUMMY:
-    print(f"Dummy load was run to save cache. Exiting now...")
-    sys.exit()
-
-output_int64_matrix = ephemeral_arrays["output_int64_matrix"]
-output_float64_matrix = ephemeral_arrays["output_float64_matrix"]
-
-# Persist state for tomorrow's run.
-save_run_state(state_arrays, rng)
-
-# Test/inspection only (see run_outputs_io.py docstring) -- save this chunk's
-# ephemeral output arrays so a separate script can plot across chunks without
-# re-running the simulation. Chunk index = however many chunk files already
-# exist, so consecutive `python run.py` calls append in order.
-this_chunk_index = len(_find_chunks("run_outputs"))
-saved_path = save_run_outputs(ephemeral_arrays, this_chunk_index)
-print(f"Saved chunk outputs to {saved_path}")
-
-# scadafier + nullifier: the "raw data" layer for the rest of the pipeline.
-# telemetry/batch_sensors get nullified (genuine sensor transmission-loss
-# failure mode); controller-event and business ledgers don't (see nullifier.py).
-#
-# Two different rate profiles, not one -- telemetry's channels are fixed-position
-# instruments realistically hardwired to a local PLC/BMS (HART/Modbus-class
-# reliability), batch_sensors' load cell + pulp probe are realistically wireless/
-# battery-powered and mounted on pallets that physically move. Defaults below are
-# informed by published MTBF/PDR figures for each category (see conversation --
-# not exact for your specific hardware/site, override via facility_cfg once you
-# have real numbers or vendor spec sheets):
-nullifier_cfg = facility_cfg.get("nullifier_rates", {})
-hardwired_rates = nullifier_cfg.get("hardwired", {
-    "background_rate_per_hour": 0.001,       # <0.1% packet loss -- HART/Modbus-class
-    "channel_outages_per_week": 0.03,        # ~once per 8 months per channel
-    "channel_outage_mean_duration_min": 240, # hours, until a tech swaps the transmitter
-})
-wireless_rates = nullifier_cfg.get("wireless", {
-    "background_rate_per_hour": 0.15,        # ~2-4% per-reading loss at typical polling cadence
-    "channel_outages_per_week": 0.35,        # ~once every 2-3 weeks per sensor
-    "channel_outage_mean_duration_min": 720, # battery swap / pallet repositioning turnaround
-})
-facility_rates = nullifier_cfg.get("facility_wide", {
-    "facility_outages_per_week": 0.15,       # placeholder -- not literature-backed, tune to your site
-    "facility_outage_mean_duration_min": 45,
-})
-
-scadafied = scadafy_all_outputs(trim_run_outputs(ephemeral_arrays))
-scadafied["telemetry"] = nullify_telemetry(
-    scadafied["telemetry"], rng, **hardwired_rates, **facility_rates,
-)
-scadafied["batch_sensors"] = nullify_telemetry(
-    scadafied["batch_sensors"], rng, **wireless_rates, **facility_rates,
-)
-
-# dtype/datetime enforcement, same convention as the weather schema
-# (table_schemas.json). Every raw table in SCHEMA_KEY_MAP below needs an entry
-# there, otherwise it is written without location_id/event_timestamp.
+# raw table name -> key in schemas/table_schemas.json
 SCHEMA_KEY_MAP = {
     "telemetry": "telemetry", "batch_sensors": "batch_sensors",
-    "compressor_events": "compressor_events", "humidifier_events": "humidifier_events", "door_events": "door_events", 
-    "crop_rotation_events": "crop_rotation_events", "refrigerant_rotation_events": "refrigerant_rotation_events",
+    "compressor_events": "compressor_events", "humidifier_events": "humidifier_events",
+    "door_events": "door_events",
+    "crop_rotation_events": "crop_rotation_events",
+    "refrigerant_rotation_events": "refrigerant_rotation_events",
     "downtime_sequence_events": "downtime_sequence_events", "lp_trip_events": "lp_trip_events",
     "defrost_events": "defrost_events",
     "inbound_orders": "orders", "outbound_orders": "orders",
     "inbound_pallet_history": "pallet_history", "outbound_pallet_history": "pallet_history",
 }
 
-raw_dir = Path("raw_parquets") / f"chunk_{this_chunk_index:04d}"
-raw_dir.mkdir(parents=True, exist_ok=True)
-for name, frame in scadafied.items():
-    schema = table_schemas.get(SCHEMA_KEY_MAP[name])
-    if schema is not None:
-        frame["location_id"] = int(active_location_id) # add location_id col
-        frame["event_timestamp"] = pd.to_datetime(frame["timestamp_ms"], unit="ms")
-        frame = enforce_dtypes(frame, schema["dtypes"], schema["datetime_cols"])
-    frame = fix_timestamps(frame)
-    frame.to_parquet(raw_dir / f"{name}.parquet", engine="pyarrow")
-print(f"Wrote {len(scadafied)} raw parquets to {raw_dir}")
+def parse_args(argv=None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        description="Simulate one chunk of cold-storage operation and write the raw tables.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    p.add_argument("--hours", type=float, default=DEFAULT_HOURS, help="simulated hours in this chunk")
+    p.add_argument("--start-date", default=DEFAULT_START_DATE,
+                   help="cold start only: facility-local start, ISO format (ignored when resuming)")
+    p.add_argument("--fruit", choices=["blueberry", "avocado"], default="blueberry",
+                   help="cold start only: initial crop")
+    p.add_argument("--refrigerant", choices=["r404a", "r134a"], default="r404a",
+                   help="cold start only: initial refrigerant")
+    p.add_argument("--run-dir", type=Path, default=SIM_DIR,
+                   help="where state, run_outputs/ and raw_parquets/ live")
+    p.add_argument("--refresh-weather", action="store_true",
+                   help="download fresh satellite weather instead of reading weather_data.parquet")
+    p.add_argument("--no-run-outputs", action="store_true",
+                   help="skip the (multi-GB) run_outputs_chunk_NNNN.npz diagnostic dump")
+    p.add_argument("--smoke-test", nargs="?", type=float, const=SMOKE_TEST_DEFAULT_MINUTES, metavar="MINUTES",
+                   help="simulate only MINUTES (default %(const)s) to warm the numba cache; writes nothing")
+    p.add_argument("--no-cache", action="store_true", help="compile without reading or writing the numba cache")
+    p.add_argument("--clear-cache", action="store_true", help="delete the numba cache before running")
+    p.add_argument("--fastmath", choices=["safe", "full", "off"], default="safe",
+                   help="numba fast-math level (full may optimise away NaN/Inf checks)")
+    return p.parse_args(argv)
+
+
+def configure_numba(args: argparse.Namespace) -> None:
+    """Must run before any simulator module (and therefore numba) is imported."""
+    os.environ["COLDCHAIN_NUMBA_CACHE"] = "0" if args.no_cache else "1"
+    os.environ["COLDCHAIN_NUMBA_FASTMATH"] = args.fastmath
+    sys.path.insert(0, str(SIM_DIR))
+    if args.clear_cache:
+        import jit
+        print(f"Cleared numba cache ({jit.clear_cache()} entries).")
+
+
+def run(args: argparse.Namespace) -> None:
+    import numpy as np
+    import pandas as pd
+    from zoneinfo import ZoneInfo
+
+    import constants as C
+    import matrix_index_maps as M
+    from time_calendar import get_iana_timezone, _to_epoch_ms, _to_datetime_str
+    from array_builders import load_json_files, build_all_parameter_arrays, build_ephemeral_arrays
+    from run_setup import (
+        retrieve_satellite_data, prepare_forcing_arrays, join_downtimes,
+        initialize_first_run_state, process_schedules, enforce_dtypes, fix_timestamps,
+    )
+    from engine import run_simulator
+    from state_persistence import save_run_state, load_run_state
+    from run_outputs_io import save_run_outputs, trim_run_outputs, _find_chunks
+    from scadafier import scadafy_all_outputs
+    from nullifier import nullify_telemetry
+
+    smoke = args.smoke_test is not None
+    run_dir = args.run_dir.resolve()
+    state_npz, rng_json = run_dir / "state.npz", run_dir / "rng_state.json"
+    outputs_dir, parquet_root = run_dir / "run_outputs", run_dir / "raw_parquets"
+    weather_file, raw_weather_file = SIM_DIR / "weather_data.parquet", SIM_DIR / "raw_weather_data.parquet"
+    os.chdir(SIM_DIR)   # the config loaders use paths relative to the simulation folder
+
+    configs = load_json_files("./configs")
+    facility_cfg = configs["facility_runtime_config"]
+    equipment_catalog = configs["catalog_equipment_config"]
+    respiration_db = configs["fruit_respiration_curves"]
+    table_schemas = load_json_files("./schemas")["table_schemas"]
+
+    active_location_id = facility_cfg["facility_location"]["active_location_id"]
+    location = facility_cfg["facility_location"]["locations"][str(active_location_id)]
+    runtime_settings = facility_cfg["simulation_runtime_settings"]
+
+    # Resume from saved state if present, else cold start (rng is built first either way).
+    resumed = load_run_state(str(state_npz), str(rng_json))
+    if resumed is not None:
+        state_arrays, rng = resumed
+        saved_float = state_arrays["room_state_float64_vector"].size
+        saved_int = state_arrays["room_state_int64_vector"].size
+        if saved_float != M.N_ROOM_STATE_FLOAT64_FIELDS or saved_int != M.N_ROOM_STATE_INT64_FIELDS:
+            raise ValueError(
+                f"Saved room-state vectors have obsolete lengths ({saved_float} float, {saved_int} int); "
+                f"current layout needs ({M.N_ROOM_STATE_FLOAT64_FIELDS} float, {M.N_ROOM_STATE_INT64_FIELDS} int). "
+                "Delete state.npz / rng_state.json to cold-start, or migrate the checkpoint."
+            )
+        print(f"Resuming from {state_npz.name} / {rng_json.name} in {run_dir}")
+    else:
+        rng = np.random.default_rng(runtime_settings["rng_seed"])
+        state_arrays = None
+
+    tz_obj = ZoneInfo(get_iana_timezone(location["latitude"], location["longitude"]))
+    if resumed is not None:
+        start_ms = int(state_arrays["room_state_int64_vector"][M.IDX_ROOM_STATE_EPOCH_TIMESTAMP_MS])
+    else:
+        start_ms = _to_epoch_ms(str(args.start_date), tz_obj)
+
+    if smoke:
+        end_ms = start_ms + int(args.smoke_test * 60e3)
+    else:
+        end_ms = int(start_ms + C.MS_PER_HOUR * args.hours)
+    sim_hours = (end_ms - start_ms) / C.MS_PER_HOUR
+    print(f"start: {_to_datetime_str(start_ms)}\nend:   {_to_datetime_str(end_ms)}")
+
+    if args.refresh_weather and not smoke:
+        weather_data_df, raw_weather_data_df = retrieve_satellite_data(
+            rng=rng, start_epoch_ms=start_ms, end_epoch_ms=end_ms,
+            measurements=runtime_settings["required_weather_measurements"],
+            active_location_id=active_location_id, facility_cfg=facility_cfg, table_schema=table_schemas,
+        )
+        weather_data_df.to_parquet(weather_file, engine="pyarrow")
+        raw_weather_data_df.to_parquet(raw_weather_file, engine="pyarrow")
+    else:
+        weather_data_df = pd.read_parquet(weather_file, engine="pyarrow")
+
+    forcing_data, _ = prepare_forcing_arrays(
+        sim_start_ms=start_ms, sim_end_ms=end_ms, facility_cfg=facility_cfg, weather_data=weather_data_df,
+    )
+    parameter_arrays = build_all_parameter_arrays(
+        facility_cfg=facility_cfg, equipment_catalog=equipment_catalog, respiration_db=respiration_db,
+    )
+    ephemeral_arrays = build_ephemeral_arrays(
+        start_ms, end_ms, parameter_arrays["base_quality_grade_probs_matrix"], facility_cfg,
+    )
+
+    if state_arrays is None:
+        fruit = {"blueberry": M.FRUIT_TYPE_BLUEBERRY, "avocado": M.FRUIT_TYPE_AVOCADO}[args.fruit]
+        refrigerant = {"r404a": M.REFRIGERANT_R404A, "r134a": M.REFRIGERANT_R134A}[args.refrigerant]
+        state_arrays = initialize_first_run_state(
+            rng, start_ms, forcing_data["forcing_matrix"],
+            parameter_arrays["room_configurations_float64_vector"],
+            parameter_arrays["equipment_configurations_float64_vector"],
+            parameter_arrays["equipment_configurations_int64_vector"],
+            parameter_arrays["fruit_parameters_float64_matrix"],
+            parameter_arrays["fruit_parameters_int64_matrix"],
+            parameter_arrays["refrigerant_properties_matrix"],
+            parameter_arrays["refrigerant_surfaces_matrix"],
+            parameter_arrays["historical_yield_matrix"],
+            parameter_arrays["base_quality_grade_probs_matrix"],
+            parameter_arrays["fruit_respiration_curves_matrix"],
+            ephemeral_arrays["room_ephemeral_int64_vector"],
+            ephemeral_arrays["crop_rotation_event_ledger"],
+            ephemeral_arrays["refrigerant_rotation_event_ledger"],
+            starting_crop_row=fruit,
+            starting_refrigerant_row=refrigerant,
+            magnus_const_set=C.ALDUCHOV_LIQ_CONST_SET,
+        )
+
+    # Folds leftover schedule rows saved in the state with the config-declared schedule.
+    input_schedule_arrays = join_downtimes(facility_cfg, state_file_path=str(state_npz))
+    (
+        state_arrays["downtime_timestamps_ms_vector"],
+        state_arrays["valid_crop_rotation_timestamps_ms_vector"],
+        state_arrays["valid_refrigerant_rotation_timestamps_ms_vector"],
+    ) = process_schedules(
+        input_schedule_arrays["input_downtime_timestamps_ms_matrix"],
+        input_schedule_arrays["input_crop_rotation_timestamps_ms_vector"],
+        input_schedule_arrays["input_refrigerant_rotation_timestamps_ms_vector"],
+        state_arrays["room_state_int64_vector"],
+        ephemeral_arrays["room_ephemeral_int64_vector"],
+        parameter_arrays["room_configurations_int64_vector"],
+        start_ms, end_ms,
+        parameter_arrays["room_configurations_int64_vector"][M.IDX_ROOM_CFG_DT_ENGINE_MS],
+    )
+
+    t0 = time.perf_counter()
+    run_simulator(
+        **state_arrays, **forcing_data, **parameter_arrays, **ephemeral_arrays,
+        sim_end_epoch_ms=end_ms, rng=rng,
+    )
+    print(f"Execution time: {time.perf_counter() - t0:.2f} s for {sim_hours:.4g} simulated hours "
+          f"(includes numba compilation on a cold cache).")
+
+    if smoke:
+        print("Smoke test finished: numba cache is warm; no state or outputs were written.")
+        return
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+    save_run_state(state_arrays, rng, str(state_npz), str(rng_json))
+
+    chunk_index = len(_find_chunks(str(outputs_dir)))
+    if not args.no_run_outputs:
+        print(f"Saved chunk outputs to {save_run_outputs(ephemeral_arrays, chunk_index, str(outputs_dir))}")
+
+    # scadafier + nullifier: the "raw data" layer. Telemetry and batch sensors are
+    # nullified (sensor transmission loss); event and business ledgers are not.
+    # Telemetry = hardwired instruments; batch sensors = wireless, on moving pallets.
+    # Rates live in facility_runtime_config.json ("nullifier_rates").
+    rates = facility_cfg["nullifier_rates"]
+    facility_rates = rates["facility_wide"]
+    scadafied = scadafy_all_outputs(trim_run_outputs(ephemeral_arrays))
+    scadafied["telemetry"] = nullify_telemetry(scadafied["telemetry"], rng, **rates["hardwired"], **facility_rates)
+    scadafied["batch_sensors"] = nullify_telemetry(scadafied["batch_sensors"], rng, **rates["wireless"], **facility_rates)
+
+    raw_dir = parquet_root / f"chunk_{chunk_index:04d}"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    for name, frame in scadafied.items():
+        schema = table_schemas.get(SCHEMA_KEY_MAP[name])
+        if schema is not None:
+            frame["location_id"] = int(active_location_id)
+            frame["event_timestamp"] = pd.to_datetime(frame["timestamp_ms"], unit="ms")
+            frame = enforce_dtypes(frame, schema["dtypes"], schema["datetime_cols"])
+        frame = fix_timestamps(frame)
+        frame.to_parquet(raw_dir / f"{name}.parquet", engine="pyarrow")
+    print(f"Wrote {len(scadafied)} raw parquets to {raw_dir}")
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    configure_numba(args)
+    run(args)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

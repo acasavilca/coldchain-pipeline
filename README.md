@@ -42,9 +42,10 @@ works). The current code is a ground-up rewrite around the physics-based simulat
 
 ## Running
 
-1. Simulator: `simulation/run.py` is the entry point for one chunk of simulated time. Configuration
-   lives in `simulation/configs/`. Dependencies include numpy, numba, pandas, pyarrow,
-   timezonefinder, reverse_geocoder and pycountry.
+1. Simulator: `python simulation/run.py` simulates one chunk of time (`--hours`, `--smoke-test`,
+   `--run-dir` and more; see `simulation/README.md`). Configuration lives in `simulation/configs/`.
+   Dependencies include numpy, numba, pandas, pyarrow, CoolProp, timezonefinder, reverse_geocoder
+   and pycountry. Numba compilation is cached automatically (about a minute on a cold start).
 2. Load the raw parquet tables into a BigQuery dataset named `coldchain_raw` with the helpers in
    `bq/`: `bash bq/create_tables.sh` once, then `bash bq/load_chunks.sh <first> <last>` (see `bq/README.md`).
 3. `cd dbt_project && dbt deps && dbt seed && dbt build` with a profile named `coldchain_pipeline`.
@@ -57,12 +58,15 @@ Work in progress. The marts are built and tested for the incremental chain.
 The simulator models evaporator frost, electric defrost, low-pressure trips and the airflow
 interlock, and exports them as raw tables (`defrost_events`, `lp_trip_events`) and telemetry
 (`t_coil_evap_c`, `evap_air_velocity_m_s`). The dbt layer ingests these (staging models and
-sensor tags), but the models do not yet use them analytically.
+sensor tags), but the models do not yet use them analytically. Every compressor state change in
+`compressor_events` carries a `switch_reason` (thermostat, defrost, downtime, low-pressure trip,
+airflow interlock), and the reason codes are decoded in the marts through seeds generated from the
+simulator config.
 
 ## Roadmap
 
-- **Defrost and trip analytics in dbt**: classify every compressor stop by cause (thermostat,
-  defrost, low-pressure trip, airflow interlock); defrost and trip windows in the state timeline;
+- **Defrost and trip analytics in dbt**: classify every compressor stop by cause using
+  `switch_reason` (thermostat, defrost, downtime, low-pressure trip, airflow interlock); defrost and trip windows in the state timeline;
   defrost recovery and cause attribution in the compliance models; post-defrost handling and
   airflow-ratio metrics in the compressor performance mart; per-defrost and per-trip fact tables.
 - **Tests and documentation**: `schema.yml` with column tests, defrost/trip sanity tests.

@@ -16,7 +16,7 @@ impossible or would silently read a stale value from a prior step.
 
 from matrix_index_maps import *  # noqa: F401,F403
 from constants import SENTINEL_FLOAT64, CP_ICE
-from numba import njit
+from jit import njit
 import math
 
 @njit

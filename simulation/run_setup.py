@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 import requests
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *
