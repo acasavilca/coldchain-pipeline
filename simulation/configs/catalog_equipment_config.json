@@ -1,0 +1,389 @@
+{
+  "compressors": {
+    "1": {
+      "metadata": {
+        "model": "MTZ160HW4AVE",
+        "source": "Danfoss Reciprocating Compressors MT/MTZ/NTZ datasheet (2018)",
+        "siglepack_code": "MTZ160-4VI",
+        "rating_standard": "EN_12900",
+        "rating_frequency": "50 Hz",
+        "equipment_id": 1
+      },
+      "displacement_cm3_rev": 271.55,
+      "nominal_speed_rpm": 2900.0,
+      "idling_friction_factor": 0.22,
+      "cooling_inertia_time_constant_sec": 3.0,
+      "provenance_notes": "idling_friction_factor and cooling_inertia_time_constant_sec: unsourced (carried over from facility config)",
+      "refrigerants": {
+        "R404A": {
+          "universal_fluid_constants": {
+            "gamma_refrigerant": 1.115
+          },
+          "compressor_mechanical_ratings": {
+            "evaporating_temperatures_c": [-30.0, -25.0, -20.0, -15.0, -10.0, -5.0, 0.0, 5.0, 10.0],
+            "condensing_temperatures_c": [30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0],
+            "cooling_capacity_w": [
+              [9609.0, 12945.0, 17010.0, 21898.0, 27702.0, 34515.0, 42432.0, 51545.0, 61948.0],
+              [8450.0, 11549.0, 15316.0, 19845.0, 25228.0, 31559.0, 38932.0, 47439.0, 57175.0],
+              [7339.0, 10192.0, 13652.0, 17811.0, 22764.0, 28602.0, 35421.0, 43312.0, 52373.0],
+              [6275.0,  8872.0, 12014.0, 15794.0, 20305.0, 25642.0, 31897.0, 39164.0, 47537.0],
+              [5254.0,  7584.0, 10399.0, 13789.0, 17850.0, 22675.0, 28356.0, 34988.0, 42663.0],
+              [   0.0,  6326.0,  8803.0, 11794.0, 15394.0, 19697.0, 24794.0, 30781.0, 37750.0],
+              [   0.0,  5094.0,  7222.0,  9805.0, 12934.0, 16705.0, 21209.0, 26540.0, 32792.0]
+            ],
+            "power_input_w": [
+              [6678.0, 7512.0, 8282.0, 8999.0,  9675.0, 10323.0, 10955.0, 11583.0, 12220.0],
+              [6772.0, 7709.0, 8582.0, 9404.0, 10186.0, 10941.0, 11681.0, 12418.0, 13165.0],
+              [6811.0, 7853.0, 8332.0, 9760.0, 10650.0, 11514.0, 12364.0, 13212.0, 14071.0],
+              [6804.0, 7952.0, 9039.0, 10076.0, 11076.0, 12051.0, 13013.0, 13975.0, 14948.0],
+              [6760.0, 8017.0, 9214.0, 10363.0, 11475.0, 12563.0, 13640.0, 14717.0, 15806.0],
+              [   0.0, 8058.0, 9367.0, 10629.0, 11855.0, 13059.0, 14252.0, 15447.0, 16655.0],
+              [   0.0, 8084.0, 9507.0, 10884.0, 12228.0, 13549.0, 14861.0, 16175.0, 17504.0]
+            ],
+            "mass_flow_kg_h": [
+              [302.0, 398.0, 510.0, 640.0, 790.0, 961.0, 1157.0, 1378.0, 1627.0],
+              [286.0, 381.0, 492.0, 620.0, 768.0, 937.0, 1130.0, 1348.0, 1594.0],
+              [269.0, 363.0, 472.0, 599.0, 744.0, 911.0, 1101.0, 1316.0, 1559.0],
+              [252.0, 345.0, 452.0, 576.0, 719.0, 883.0, 1070.0, 1282.0, 1521.0],
+              [235.0, 326.0, 431.0, 553.0, 694.0, 855.0, 1038.0, 1247.0, 1482.0],
+              [  0.0, 307.0, 410.0, 529.0, 667.0, 825.0, 1005.0, 1210.0, 1441.0],
+              [  0.0, 287.0, 388.0, 504.0, 639.0, 794.0,  970.0, 1171.0, 1398.0]
+            ],
+            "superheat_k": 10.0,
+            "subcooling_k": 0.0
+          },
+          "fitted_compressor_polynomials": {
+            "cooling_capacity_w": {
+                "coefficients": [
+                    20305.355021981028,
+                    19634.042963608368,
+                    -7368.081999790387,
+                    6600.410811135696,
+                    12.83401204378606,
+                    -5717.800469457761,
+                    996.6173337119694,
+                    -15.62330913929793,
+                    -1476.2106492233816,
+                    -179.18734319081022
+                ],
+                "bounds": [
+                    -30.0,
+                    10.0,
+                    30.0,
+                    60.0
+                ],
+                "type": "poly2d_cubic"
+            },
+            "power_input_w": {
+                "coefficients": [
+                    11053.29564399558,
+                    4006.138648489276,
+                    1270.0447942213596,
+                    -183.3096610648995,
+                    -103.43475205483492,
+                    1325.204457487317,
+                    69.06370557186222,
+                    3.8182016437428956,
+                    32.3035837892902,
+                    8.614833503034504
+                ],
+                "bounds": [
+                    -30.0,
+                    10.0,
+                    30.0,
+                    60.0
+                ],
+                "type": "poly2d_cubic"
+            },
+            "mass_flow_kg_s": {
+                "coefficients": [
+                    0.199827896564388,
+                    0.17025062381512326,
+                    -0.02107691792132607,
+                    0.04649582127975521,
+                    -0.001364671464106737,
+                    -0.008878896874342065,
+                    0.006003560784108018,
+                    0.00013116137832221066,
+                    -0.002009509290518196,
+                    -0.0010561376924930806
+                ],
+                "bounds": [
+                    -30.0,
+                    10.0,
+                    30.0,
+                    60.0
+                ],
+                "type": "poly2d_cubic"
+            }
+          },
+          "literature_isentropic_efficiency_fit": {
+            "coefficients": [0.38, 0.12, -0.018],
+            "bounds": [0.0, 0.0]
+          },
+          "low_pressure_trip_settings": {
+            "cut_out_bar": 2.50,
+            "cut_in_bar": 3.00
+          }
+        },
+        "R134a": {
+          "universal_fluid_constants": {
+            "gamma_refrigerant": 1.111
+          },
+          "compressor_mechanical_ratings": {
+            "evaporating_temperatures_c": [-25.0, -20.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0, 20.0],
+            "condensing_temperatures_c": [35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 75.0],
+            "cooling_capacity_w": [
+              [5597.0, 7862.0, 14130.0, 18302.0, 23277.0, 29140.0, 35975.0, 43865.0, 52896.0],
+              [4930.0, 7103.0, 13045.0, 16981.0, 21673.0, 27205.0, 33662.0, 41126.0, 49683.0],
+              [4231.0, 6304.0, 11900.0, 15593.0, 19993.0, 25186.0, 31255.0, 38284.0, 46358.0],
+              [3516.0, 5479.0, 10713.0, 14152.0, 18252.0, 23096.0, 28768.0, 35533.0, 42935.0],
+              [   0.0,    0.0,  9498.0, 12675.0, 16465.0, 20951.0, 26218.0, 32350.0, 39431.0],
+              [   0.0,    0.0,     0.0, 11177.0, 14145.0, 18767.0, 23620.0, 29289.0, 35860.0],
+              [   0.0,    0.0,     0.0,     0.0, 12815.0, 16559.0, 20988.0, 26186.0, 32238.0],
+              [   0.0,    0.0,     0.0,     0.0,     0.0,     0.0, 15686.0, 19915.0, 24901.0]
+            ],
+            "power_input_w": [
+              [3839.0, 4359.0, 5441.0, 5977.0, 6494.0, 6978.0, 7418.0,  8802.0,  8115.0],
+              [3978.0, 4513.0, 5645.0, 6218.0, 6778.0, 7313.0, 7810.0,  8258.0,  8643.0],
+              [4088.0, 4643.0, 5836.0, 6449.0, 7057.0, 7446.0, 8206.0,  8722.0,  9183.0],
+              [4170.0, 4749.0, 6011.0, 6669.0, 7329.0, 7978.0, 8604.0,  9194.0,  9736.0],
+              [   0.0,    0.0, 6169.0, 6878.0, 7595.0, 8308.0, 9005.0,  9673.0, 10300.0],
+              [   0.0,    0.0,    0.0, 7073.0, 7852.0, 8634.0, 9407.0, 10158.0, 10875.0],
+              [   0.0,    0.0,    0.0,    0.0, 8100.0, 8955.0, 9809.0, 10647.0, 11459.0],
+              [   0.0,    0.0,    0.0,    0.0,     0.0,    0.0, 10609.0, 11636.0, 12651.0]
+            ],
+            "mass_flow_kg_h": [
+              [142.0, 196.0, 336.0, 426.0, 530.0, 650.0, 788.0, 944.0, 1121.0],
+              [132.0, 186.0, 326.0, 415.0, 518.0, 637.0, 772.0, 927.0, 1101.0],
+              [120.0, 175.0, 314.0, 402.0, 504.0, 620.0, 754.0, 906.0, 1077.0],
+              [107.0, 162.0, 300.0, 386.0, 486.0, 601.0, 732.0, 881.0, 1049.0],
+              [  0.0,   0.0, 283.0, 368.0, 466.0, 579.0, 707.0, 853.0, 1017.0],
+              [  0.0,   0.0,   0.0, 347.0, 443.0, 553.0, 678.0, 821.0,  981.0],
+              [  0.0,   0.0,   0.0,   0.0, 416.0, 523.0, 645.0, 784.0,  941.0],
+              [  0.0,   0.0,   0.0,   0.0,   0.0,   0.0, 568.0, 699.0,  847.0]
+            ],
+            "superheat_k": 10.0,
+            "subcooling_k": 0.0
+          },
+          "fitted_compressor_polynomials": {
+            "cooling_capacity_w": {
+                "coefficients": [
+                    14451.359943976177,
+                    17073.79678212287,
+                    -6647.01178429336,
+                    6674.562122372589,
+                    -188.38689585055909,
+                    -5674.993290554563,
+                    1250.3986276093974,
+                    228.00570617446556,
+                    -1878.2739672394866,
+                    -363.4408389030541
+                ],
+                "bounds": [
+                    -25.0,
+                    20.0,
+                    35.0,
+                    75.0
+                ],
+                "type": "poly2d_cubic"
+            },
+            "power_input_w": {
+                "coefficients": [
+                    7236.356219124889,
+                    3243.9916327404308,
+                    986.4366472578124,
+                    -7.660828124928457,
+                    -193.46367750123886,
+                    1220.535675164973,
+                    -221.64894320909514,
+                    -224.67125076794503,
+                    141.4145518223424,
+                    488.81856659176356
+                ],
+                "bounds": [
+                    -25.0,
+                    20.0,
+                    35.0,
+                    75.0
+                ],
+                "type": "poly2d_cubic"
+            },
+            "mass_flow_kg_s": {
+                "coefficients": [
+                    0.11535536925468597,
+                    0.12248222863103278,
+                    -0.022999898183036847,
+                    0.038781419290748555,
+                    -0.006623460023340605,
+                    -0.010184463785995109,
+                    0.00594499589935284,
+                    -0.0004602471611088177,
+                    -0.004460530790587416,
+                    -0.0026134951370453026
+                ],
+                "bounds": [
+                    -25.0,
+                    20.0,
+                    35.0,
+                    75.0
+                ],
+                "type": "poly2d_cubic"
+            }
+          },
+          "literature_isentropic_efficiency_fit": {
+            "coefficients": [0.38, 0.12, -0.018],
+            "bounds": [0.0, 0.0]
+          },
+          "low_pressure_trip_settings": {
+            "cut_out_bar": 1.65,
+            "cut_in_bar": 2.00
+          }
+        }
+      }
+    }
+  },
+  "evaporators": {
+    "1": {
+      "metadata": {
+        "model": "HMR-632-N-4Rx4F-E_delta",
+        "source": "HC Heat-Exchangers HMR-630 Unit Cooler catalog (2014 revision)",
+        "url": "https://www.hcaircon.com/wp-content/uploads/HMR-630.pdf",
+        "rating_standard": "EN_328",
+        "fan_configuration_key": "delta",
+        "fan_configuration_descriptive": "Delta (EBM S4D630, 2630 W each, 2 fans)",
+        "fan_id": 1,
+        "equipment_id": 1
+      },
+      "rated_airflow_m3_s": 10.52,
+      "rated_face_velocity_m_s": 3.52,
+      "external_surface_area_m2": 117.29,
+      "fin_spacing_mm": 6.35,
+      "fin_thickness_mm": 0.2,
+      "tube_clear_gap_mm": 20.8,
+      "face_bridge_length_mm": 3.075,
+      "face_contact_fraction": 0.25,
+      "exposed_face_h_w_m2_k": 5.0,
+      "air_water_vapor_lewis_number": 1.0,
+      "coil_rows": 4,
+      "number_of_fans": 2,
+      "fan_power_each_w": 2630.0,
+      "defrost_heater_w": 23000.0,
+      "defrost_drain_pan_heater_w": 4600.0,
+      "drain_pan_air_conductance_w_k": 7.5,
+      "face_release_melt_film_mm": 0.1,
+      "unit_mass_kg": 291.0,
+      "metal_mass_kg": 165.0,
+      "coil_nominal_pressure_drop_pa": 100.0,
+      "fan_inertia_time_constant_sec": 8.0,
+      "ua_internal_scale": 2.2,
+      "air_side_ua_velocity_exponent": 0.5,
+      "tau_off_sec": 60.0,
+      "effective_residual_conductance_w_k": 50.0,
+      "provenance_notes": "metal_mass_kg: unsourced (catalog gives whole-unit mass 291 kg incl. casing and fans; coil-only mass not published). coil_nominal_pressure_drop_pa, fan tau, ua_internal_scale, velocity exponent: unsourced. Catalog ratings are not refrigerant-specific; the same values are used for all fluids. rated_face_velocity_m_s: HMR-630 catalog delta fan, 4 FPI, HMR-632-4R; frontal area is rated airflow divided by this velocity. fin_spacing_mm is the fin pitch (HMR catalog). fin_thickness_mm: ASSUMED. tube_clear_gap_mm: INFERRED from catalog face area, internal volume and two external areas (range 19-23 mm for tube walls of 0.4-1.0 mm). face_bridge_length_mm: ASSUMPTION, half the 6.15 mm fin clear gap; face_contact_fraction: ASSUMPTION for passage-to-face ice bridges; exposed_face_h_w_m2_k: ASSUMPTION for still-air convection at a blocked front; air_water_vapor_lewis_number: ASSUMPTION of unity for the heat/mass analogy. defrost_drain_pan_heater_w: ASSUMED 2 of the 10 catalog 2300 W elements serve the tray; catalog DT labeling is suggestive but does not explicitly establish this split. drain_pan_air_conductance_w_k: ASSUMPTION, about 5 W/(m2 K) across half the 2.99 m2 coil front; pan geometry is not cataloged. face_release_melt_film_mm: ASSUMED equivalent melted attachment-film thickness over the existing fin-edge contact area, to be calibrated from defrost observations. tau_off_sec: relaxation of refrigerant temperature toward evaporator coil metal.",
+      "ratings": {
+        "R404A": {
+          "standard_condition": "SC2",
+          "capacity_w": 48760.0,
+          "delta_t1_k": 8.0,
+          "air_inlet_temp_c": 0.0,
+          "wet_factor": 1.15,
+          "notes": "SC2 conditions from EN 328 (Eurovent); wet factor 1.15 from KFL and Alfa Laval unit cooler catalogs (interpretation: catalog capacity / 1.15 = dry sensible)"
+        },
+        "R134a": {
+          "standard_condition": "SC2",
+          "capacity_w": 48760.0,
+          "delta_t1_k": 8.0,
+          "air_inlet_temp_c": 0.0,
+          "wet_factor": 1.15,
+          "notes": "Same as R404A: catalog rating is not refrigerant-specific"
+        }
+      }
+    }
+  },
+
+  "condensers": {
+    "1": {
+      "metadata": {
+        "model": "C1-059/1.63_delta",
+        "source": "Greenhalgh C1-Series Flat-Block Remote Air-Cooled Condensers brochure (Altitude Trading)",
+        "url": "https://altitudetrading.com.au/wp-content/uploads/2014/07/AT_C1_Condenser_Brochure_WEB.pdf",
+        "rating_basis": "15 K TD (dew point), sea level, full (Delta) fan speed",
+        "fan": "Ziehl-Abegg FE063-VDS, 1 fan, 2600 W",
+        "equipment_id": 1
+      },
+      "rated_airflow_m3_h": 16944.0,
+      "external_surface_area_m2": 98.0,
+      "fin_spacing_mm": 2.2,
+      "tube_od_mm": 9.52,
+      "rows_deep": 4,
+      "number_of_fans": 1,
+      "fan_power_each_w": 2600.0,
+      "unit_mass_kg": 115.0,
+      "metal_mass_kg": 115.0,
+      "fan_inertia_time_constant_sec": 12.0,
+      "ua_internal_scale": 3.5,
+      "air_side_ua_velocity_exponent": 0.5,
+      "tau_off_sec": 30.0,
+      "provenance_notes": "metal_mass_kg set to catalog empty unit weight (upper bound for coil mass). fan tau, ua_internal_scale, velocity exponent: unsourced. Rating air inlet temperature not stated in brochure: 25 C assumed (ENV 327 condition per Alfa Laval AlfaGreen catalog). tau_off_sec: relaxation of refrigerant temperature toward condenser coil metal.",
+      "ratings": {
+        "R404A": { "capacity_w": 58600.0, "delta_t_k": 15.0, "air_inlet_temp_c": 25.0, "wet_factor": 1.0 },
+        "R134a": { "capacity_w": 57200.0, "delta_t_k": 15.0, "air_inlet_temp_c": 25.0, "wet_factor": 1.0 }
+      }
+    },
+    "2": {
+      "metadata": {
+        "model": "C1-070/1.63_delta",
+        "source": "Greenhalgh C1-Series Flat-Block Remote Air-Cooled Condensers brochure (Altitude Trading)",
+        "url": "https://altitudetrading.com.au/wp-content/uploads/2014/07/AT_C1_Condenser_Brochure_WEB.pdf",
+        "rating_basis": "15 K TD (dew point), sea level, full (Delta) fan speed",
+        "fan": "Ziehl-Abegg FE063-VDS, 1 fan, 2600 W",
+        "equipment_id": 2
+      },
+      "rated_airflow_m3_h": 15434.0,
+      "external_surface_area_m2": 147.0,
+      "fin_spacing_mm": 2.2,
+      "tube_od_mm": 9.52,
+      "rows_deep": 6,
+      "number_of_fans": 1,
+      "fan_power_each_w": 2600.0,
+      "unit_mass_kg": 130.0,
+      "metal_mass_kg": 130.0,
+      "fan_inertia_time_constant_sec": 12.0,
+      "ua_internal_scale": 3.5,
+      "air_side_ua_velocity_exponent": 0.5,
+      "tau_off_sec": 30.0,
+      "provenance_notes": "Same as C1-059. Note high rated effectiveness (~0.9) makes derived UA sensitive to small input errors. tau_off_sec: relaxation of refrigerant temperature toward condenser coil metal.",
+      "ratings": {
+        "R404A": { "capacity_w": 70100.0, "delta_t_k": 15.0, "air_inlet_temp_c": 25.0, "wet_factor": 1.0 },
+        "R134a": { "capacity_w": 66400.0, "delta_t_k": 15.0, "air_inlet_temp_c": 25.0, "wet_factor": 1.0 }
+      }
+    }
+  },
+
+  "fans": {
+    "1": {
+      "metadata": {
+        "model": "ebm-papst S4D630-AD01-01",
+        "source": "ebm-papst datasheet, 'Curves: Air performance 50 Hz', Measured values table",
+        "air_density_kg_m3": 1.176,
+        "per_fan": true,
+        "equipment_id": 1
+      },
+      "delta": {
+        "speed_rpm":               [1375, 1360, 1345, 1320],
+        "power_input_w":           [2115, 2304, 2476, 2630],
+        "current_a":               [4.07, 4.30, 4.57, 4.78],
+        "air_flow_m3_h":           [19900, 17865, 15385, 12875],
+        "pressure_increase_pa":    [0, 75, 150, 220]
+      },
+      "star": {
+        "speed_rpm":               [1150, 1115, 1080, 1050],
+        "power_input_w":           [1536, 1616, 1687, 1750],
+        "current_a":               [2.57, 2.71, 2.83, 2.95],
+        "air_flow_m3_h":           [16695, 14595, 12410, 10220],
+        "pressure_increase_pa":    [0, 51, 98, 140]
+      }
+    }
+  }
+}

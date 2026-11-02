@@ -1,4 +1,0 @@
-{
-  "python.defaultInterpreterPath": "/home/andres/anaconda3/envs/dbt_vscode/bin/python",
-  "python.terminal.activateEnvironment": true
-}

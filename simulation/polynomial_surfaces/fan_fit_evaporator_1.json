@@ -1,0 +1,47 @@
+{
+    "metadata": {
+        "evaporator_id": 1,
+        "evaporator_model": "HMR-632-N-4Rx4F-E_delta",
+        "fan_id": 1,
+        "fan_model": "ebm-papst S4D630-AD01-01",
+        "fan_wiring": "delta",
+        "number_of_fans": 2,
+        "datasheet_air_density_kg_m3": 1.176,
+        "x": "static pressure increase [Pa]",
+        "y": "unit airflow [m3/s] (per-fan airflow x number of fans)",
+        "normalization": "x_norm = 2*(x - bounds[0])/(bounds[1] - bounds[0]) - 1"
+    },
+    "data_points": {
+        "pressure_increase_pa": [
+            0.0,
+            75.0,
+            150.0,
+            220.0
+        ],
+        "unit_airflow_m3_s": [
+            11.055555555555555,
+            9.925,
+            8.547222222222222,
+            7.152777777777778
+        ]
+    },
+    "fit": {
+        "coefficients": [
+            9.304330147250994,
+            -1.9576674356730703,
+            -0.20048620962463604
+        ],
+        "bounds": [
+            0.0,
+            220.0
+        ],
+        "type": "poly1d_quadratic"
+    },
+    "diagnostics": {
+        "rmse": 0.013748180106668187,
+        "r_squared": 0.9999119067648249,
+        "max_abs_error": 0.018718284337786883,
+        "max_rel_pct_error": 0.21899845179081176,
+        "matrix_condition_number": 3.0876335170145457
+    }
+}

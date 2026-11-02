@@ -1,0 +1,89 @@
+# dbt_project.yml
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'coldchain_pipeline'
+version: '1.0.0'
+config-version: 2
+# This setting configures which "profile" dbt uses for this project.
+profile: 'coldchain_pipeline'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+vars:
+  telemetry_sensor_tags:
+    - compressor_power_w
+    - t_suction_line_c
+    - p_suction_line_bar
+    - t_liquid_line_c
+    - p_liquid_line_bar
+    - t_room_air_return_c
+    - t_room_air_supply_c
+    - rh_room_air_supply_frac
+    - t_room_c
+    - rh_room_frac
+    - co2_ppm
+    - o2_pct
+    - t_coil_evap_c
+    - evap_air_velocity_m_s
+  batch_sensor_tags:
+    - t_pulp_c
+    - mass_kg
+  state_columns:
+    - compressor_cycle_id
+    - is_compressor_active
+    - compressor_status
+    - compressor_cycle_anomalous
+    - humidifier_cycle_id
+    - is_humidifier_active
+    - num_discs_on
+    - num_clusters_on
+    - max_humid_capacity_utilized_pct
+    - humidifier_cycle_anomalous
+    - internal_opening_id
+    - external_opening_id
+    - is_internal_door_open
+    - is_external_door_open
+    - internal_opening_anomalous
+    - external_opening_anomalous
+    - active_fruit_type_code
+    - crop_rotation_anomalous
+    - active_refrigerant_code
+    - refrigerant_rotation_anomalous
+    - excursion_id
+    - temperature_compliance_status
+    - excursion_block_has_gaps
+    - downtime_seq_id
+    - downtime_phase
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In dbt, the default materialization for a model is a view. This means, when you run 
+# dbt run or dbt build, all of your models will be built as a view in your data platform. 
+# The configuration below will override this setting for models in the example folder to 
+# instead be materialized as tables. Any models you add to the root of the models folder will 
+# continue to be built as views. These settings can be overridden in the individual model files
+# using the `{{ config(...) }}` macro.
+
+models:
+  coldchain_pipeline:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table

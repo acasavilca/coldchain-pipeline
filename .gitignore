@@ -1,74 +1,73 @@
-# =========================
-# Python
-# =========================
+# secrets / credentials
+.aws/
+.codex/
+.agents/
+.env
+.env.*
+*.pem
+*.key
+keyfile*.json
+service-account*.json
+application_default_credentials.json
+profiles.yml
+secrets/
+*.tfstate*
+
+# dbt artifacts
+dbt_project/target/
+dbt_project/logs/
+dbt_project/dbt_packages/
+dbt_project/baseline_run_results.json
+.user.yml
+
+# simulator outputs (a single chunk is several GB)
+run_outputs/
+selected_run_outputs/
+raw_parquets/
+plots/
+*_run/
+simulation/validation/
+*.npz
+*.parquet
+# the two weather caches are small (~150 KB) inputs that run.py reads when SEND_REQUEST=0
+!weather_data.parquet
+!raw_weather_data.parquet
+*.pkl
+*.h5
+*.feather
+
+# simulator state (recreated on the first run; delete both to cold-start)
+state.npz
+rng_state.json
+
+# python / numba caches
 __pycache__/
-*.py[cod]
-*.pyd
-*.pyo
+*.pyc
+*.nbi
+*.nbc
+.ipynb_checkpoints/
+.pytest_cache/
 .venv/
 venv/
-env/
-build/
-dist/
-wheels/
 *.egg-info/
-.ipynb_checkpoints/
-*.ipynb
-*.swp
 
-# =========================
-# Environment & Secrets
-# =========================
-.env
-.env*
-.env_encoded
-*.json.key
-*credentials*.json
-*service_account*.json
-secrets/
+# dashboard (Evidence.dev) build output
+node_modules/
+.evidence/
+.svelte-kit/
 
-# =========================
-# Terraform
-# =========================
-terraform/
-**/.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-*.tfvars.json
-.terraform.lock.hcl
-
-# =========================
-# dbt
-# =========================
-blueberry_dbt/target/
-blueberry_dbt/dbt_packages/
-blueberry_dbt/logs/
-
-# =========================
-# Project-specific
-# =========================
-*notes*.txt
-NOTES*
-ref_files/
-.old_*
-ref_*
-*BACKUP*
-DEL_*
-del_*
-DELETE*
-kv_*
-uv.lock
-data_out/
-*password*
-clean_dataset.sh
-*TEST*
-errors.txt
-test_reinit*
-crash_log.txt
-_notes*
-# =========================
-# OS
-# =========================
+# editor / OS
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
+
+# local backups and scratch
+*.bak
+*.bak.*
+*.tgz
+*.zip
+*.log
+
+# personal / local-only
+dbt_project/notes

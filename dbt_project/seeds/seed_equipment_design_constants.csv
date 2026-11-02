@@ -1,0 +1,5 @@
+location_id,evaporator_design_temperature_difference_k,condenser_design_temperature_difference_k,ambient_design_temperature_c,compressor_deadband_differential_c,temperature_hysteresis_enter_margin_c,temperature_hysteresis_exit_margin_c,humidifier_max_total_discs_ceiling,humidifier_discs_per_cluster_count
+1,5.5,10.0,25.0,1.0,0.15,0.1,24,4
+2,5.5,10.0,25.0,1.0,0.15,0.1,24,4
+3,5.5,10.0,25.0,1.0,0.15,0.1,24,4
+4,5.5,10.0,25.0,1.0,0.15,0.1,24,4

@@ -1,3 +1,0 @@
-fruit_type,heat_damage_temp_c,chill_damage_temp_c,heat_damage_minutes_threshold,chill_damage_minutes_threshold,rh_low_threshold,rh_high_threshold,rh_low_damage_minutes_threshold,q_rated_kw,td_design,bf
-blueberry,2.0,-0.5,120,10,90.0,95.0,720,22.0,2.0,0.2
-avocado,7.0,3.0,120,1440,90.0,95.0,480,22.0,3.0,0.2

@@ -1,0 +1,146 @@
+{
+  "weather_dataset": {
+    "dtypes": {
+      "location_id": "int64",
+      "latitude": "float64",
+      "longitude": "float64",
+      "temperature_2m_c": "float64",
+      "relative_humidity_2m_pct": "float64",
+      "dewpoint_2m_c": "float64",
+      "shortwave_radiation_wm2": "float64",
+      "wind_speed_10m_ms": "float64",
+      "surface_pressure_hpa": "float64",
+      "soil_temperature_54cm_c": "float64"
+    },
+    "datetime_cols": [
+      "timestamp"
+    ]
+  },
+  "telemetry": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "tag_name": "string",
+      "value": "float64",
+      "unit": "string"
+    },
+    "datetime_cols": []
+  },
+  "batch_sensors": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "batch_id": "int64",
+      "pallet_slot": "int64",
+      "tag_name": "string",
+      "value": "float64",
+      "unit": "string"
+    },
+    "datetime_cols": []
+  },
+  "compressor_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "is_active": "bool"
+    },
+    "datetime_cols": []
+  },
+  "humidifier_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "num_discs_on": "int64"
+    },
+    "datetime_cols": []
+  },
+  "door_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "door_code": "int64",
+      "is_open": "bool"
+    },
+    "datetime_cols": []
+  },
+  "crop_rotation_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "fruit_type_code": "int64"
+    },
+    "datetime_cols": []
+  },
+  "refrigerant_rotation_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "refrigerant_code": "int64"
+    },
+    "datetime_cols": []
+  },
+  "downtime_sequence_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "scheduled_start_timestamp_ms": "Int64",
+      "shutdown_timestamp_ms": "Int64",
+      "ramp_up_start_timestamp_ms": "Int64",
+      "ramp_up_end_timestamp_ms": "Int64"
+    },
+    "datetime_cols": []
+  },
+  "defrost_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "start_timestamp_ms": "int64",
+      "termination_reason": "int64",
+      "ice_melted_g": "int64",
+      "coil_ice_melted_g": "int64",
+      "pan_ice_melted_g": "int64",
+      "face_ice_shed_g": "int64"
+    },
+    "datetime_cols": []
+  },
+  "orders": {
+    "dtypes": {
+      "location_id": "int64",
+      "order_id": "int64",
+      "timestamp_ms": "int64",
+      "target_fruit_mass_kg": "float64",
+      "total_box_count": "int64",
+      "minimum_grade": "Int64",
+      "total_pallet_count": "Int64",
+      "fruit_type_code": "int64",
+      "dispatch_type": "Int64",
+      "assigned_door_code": "int64",
+      "assigned_driver_code": "int64"
+    },
+    "datetime_cols": []
+  },
+  "pallet_history": {
+    "dtypes": {
+      "location_id": "int64",
+      "batch_id": "int64",
+      "parent_order_id": "int64",
+      "timestamp_ms": "int64",
+      "quality_grade": "int64",
+      "pulp_temp_c": "float64",
+      "gross_start_kg": "float64",
+      "box_start_count": "int64",
+      "gross_moved_kg": "float64",
+      "box_moved_count": "Int64",
+      "supervisor_intervention_ms": "Int64"
+    },
+    "datetime_cols": []
+  },
+  "lp_trip_events": {
+    "dtypes": {
+      "location_id": "int64",
+      "timestamp_ms": "int64",
+      "switch_on": "bool"
+    },
+    "datetime_cols": []
+  }
+}

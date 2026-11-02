@@ -1,0 +1,122 @@
+version: 2
+
+seeds:
+  - name: seed_compressor_physical_constants
+    description: "Physical and operational attributes of cold chain compressors."
+    config:
+      column_types:
+        compressor_model_code: string
+        compressor_displacement_m3_rev: float64
+        compressor_speed_hz: float64
+
+  - name: seed_compressor_rating_conditions
+    description: "Compressor rating conditions from datasheet"
+    config:
+      column_types:
+        compressor_model_code: string
+        refrigerant_code: int64
+        refrigerant_name: string
+        rated_superheat_k: float64
+        rated_subcooling_k: float64
+
+  - name: seed_refrigerant_physical_constants
+    description: "Refrigerant scalar constants."
+    config:
+      column_types:
+        refrigerant_code: int64
+        refrigerant_name: string
+        gamma_refrigerant: float64
+
+  - name: seed_rated_mass_flow_curve
+    description: "Polynomial coefficients and bounds describing refrigerant mass flow behaviors."
+    config:
+      column_types:
+        compressor_model_code: string
+        refrigerant_code: int64
+        refrigerant_name: string
+        curve_name: string
+        fit_type: string
+        coefficients: string  # Stored as string/text representation of an array
+        bounds: string        # Stored as string/text representation of an array
+
+  - name: seed_refrigerant_saturation_curves
+    description: "Thermodynamic saturation curves, Antoine equations, and enthalpy coefficients."
+    config:
+      column_types:
+        refrigerant_code: int64
+        refrigerant_name: string
+        curve_name: string
+        fit_type: string
+        coefficients: string  # Stored as string/text representation of an array
+        bounds: string        # Stored as string/text representation of an array
+
+  - name: seed_crop_variety_reference
+    description: "Biological shelf life and target setpoints for monitored crop varieties."
+    config:
+      column_types:
+        fruit_type_code: int64
+        fruit_name: string
+        biological_shelf_life_days: float64
+        target_retention_limit_days: float64
+        door_lock_threshold_temp_c: float64
+        refrigeration_target_t_setpoint_c: float64
+        refrigeration_target_rh_setpoint_fraction: float64
+        chilling_injury_threshold_c: float64
+        freezing_injury_threshold_c: float64
+        heat_risk_threshold_c: float64
+        box_packaging_tare_mass_kg: float64
+        pallet_structural_base_tare_mass_kg: float64
+
+  - name: seed_equipment_design_constants
+    description: "Baseline structural design parameters for thermodynamic components."
+    config:
+      column_types:
+        location_id: int64
+        evaporator_design_temperature_difference_k: float64
+        condenser_design_temperature_difference_k: float64
+        ambient_design_temperature_c: float64
+        compressor_deadband_differential_c: float64
+        temperature_hysteresis_enter_margin_c: float64
+        temperature_hysteresis_exit_margin_c: float64
+        humidifier_max_total_discs_ceiling: int64
+        humidifier_discs_per_cluster_count: int64
+
+  - name: seed_location_details
+    description: "Geographic metadata, country mappings, and local timezones for facility locations."
+    config:
+      column_types:
+        location_id: int64
+        region: string
+        country_name: string
+        country_code: string
+        latitude: float64
+        longitude: float64
+        iana_timezone: string
+
+  - name: seed_sensor_polling_config
+    description: "Telemetry poll intervals and precision configuration by tracking tag name."
+    config:
+      column_types:
+        tag_name: string
+        expected_polling_interval_sec: float64
+
+  - name: seed_driver_reference
+    description: "Workforce drivers roster codes and names"
+    config:
+      column_types:
+        driver_code: int64
+        driver_name: string
+
+  - name: seed_door_reference
+    description: "Door codes and names"
+    config:
+      column_types:
+        door_code: int64
+        door_name: string
+
+  - name: seed_dispatch_type_reference
+    description: "Business type codes and names"
+    config:
+      column_types:
+        dispatch_type_code: int64
+        dispatch_type_name: string
