@@ -70,8 +70,14 @@ Each chunk writes:
 - **Fruit**: crop-specific respiration heat and CO2/O2 balance (blueberry and avocado), moisture loss
   and mass change, quality grades, spoilage.
 - **Refrigeration cycle**: a compressor, an air-cooled condenser and a fan-driven evaporator with a
-  superheat PID loop, solved each step on polynomial fits of refrigerant properties (R404A, R134a)
-  and of the manufacturer's compressor and fan curves.
+  superheat PID loop, solved each step on polynomial fits of refrigerant properties (R404A, R134a).
+  Running mass flow, cooling duty and power follow from the load: the evaporator duty comes from the
+  coil heat transfer, mass flow from duty over the enthalpy rise, and power from the isentropic work
+  and a literature isentropic-efficiency fit. Datasheet data enters only through calibration at
+  start-up: the compressor's volumetric-efficiency fit (fitted to the datasheet mass-flow table; it sets
+  the maximum mass flow and an idle power floor, and never limited the flow in a 24 h test run), the
+  coil UA values (from rated capacities) and the fan curve (airflow against static pressure, which
+  sets how much airflow a frosted coil loses).
 - **Frost and defrost**: frost growth on the coil, a coil-temperature electric defrost controller
   (wait for stop, settle, heat, drip, fan delay), an evaporator airflow-proof switch and a
   low-pressure trip. Timings and thresholds are in `electric_defrost_control` and
@@ -132,8 +138,14 @@ python generate_dbt_seeds.py     # writes ../dbt_project/seeds/*.csv
 ## Assumptions and limits
 
 - The simulator has not been validated against a real installation. Equipment parameters come from
-  public datasheets; control settings (defrost interval, termination temperature, airflow-proof
-  threshold) are declared trial values, not verified manufacturer settings.
+  public datasheets and calibrate the component models; no model output is fitted to measured plant
+  data. Derived quantities were checked for plausibility against typical ranges for this
+  kind of plant, which is a sanity check, not a validation. For example, a 24 h cold-start run
+  (R404A, 0 C setpoint, evaporating near -5 C, condensing near 32 C) gave a running COP with median
+  3.2 (5th to 95th percentile 2.7 to 4.0), about 10 kW compressor input and about 32 kW evaporator
+  duty while running, against datasheet-fit rating-point values of about 31 kW cooling and 11 kW input. Control settings (defrost interval,
+  termination temperature, airflow-proof threshold) are declared trial values, not verified
+  manufacturer settings.
 - Sensor noise levels, filter windows and dropout and outage rates are plausible placeholders. The
   facility-wide outage rate in particular is not literature-backed.
 - The room, crop mix and logistics patterns are synthetic. The weather is real historical data for the
