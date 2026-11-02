@@ -10,6 +10,11 @@
     "mode": "NULLABLE"
   },
   {
+    "name": "switch_reason",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
     "name": "event_timestamp",
     "type": "TIMESTAMP",
     "mode": "NULLABLE"

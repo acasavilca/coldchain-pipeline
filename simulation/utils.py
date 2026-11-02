@@ -3,7 +3,8 @@ import numpy as np
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from numba import njit, types, typeof
+from numba import types, typeof
+from jit import njit
 from numba.typed import Dict
 import math
 from constants import SAFE_FLOOR
@@ -170,7 +171,7 @@ class OldNumpyEncoder(json.JSONEncoder):
 # (no room state, no fruit, no refrigerant) -- same tier as sort_both_axes /
 # fast_vstack_numba above, so they belong here rather than in a one-off file.
 
-@njit(cache=True)
+@njit
 def numba_clip(value, low, high):
     if value < low:
         return low
@@ -180,7 +181,7 @@ def numba_clip(value, low, high):
         return value
 
 
-@njit(cache=True)
+@njit
 def least_squares_regression(x, y):
     # --- Manual Replacement for np.polyfit(x, y, 1) ---
     n = len(x)
@@ -198,11 +199,11 @@ def least_squares_regression(x, y):
         b = (sum_y - m * sum_x) / n
     return m, b
 
-@njit(cache=True)
+@njit
 def least_squares_regression_through_origin(x, y):
     return np.sum(x * y) / max(np.sum(x * x), SAFE_FLOOR)
 
-@njit(cache=True)
+@njit
 def evaluate_poly1d_fit(
     x,
     c,
@@ -227,7 +228,7 @@ def evaluate_poly1d_fit(
     return y_pred
 
 
-@njit(cache=True)
+@njit
 def evaluate_poly2d_quadratic_fit(
     x1,
     x2,
@@ -252,7 +253,7 @@ def evaluate_poly2d_quadratic_fit(
     return y_pred
 
 
-@njit(cache=True)
+@njit
 def evaluate_poly2d_cubic_fit(
     x1,
     x2,
@@ -278,7 +279,7 @@ def evaluate_poly2d_cubic_fit(
     return y_pred
 
 
-@njit(cache=True)
+@njit
 def evaluate_poly3d_quadratic_fit(
     x1,
     x2,
@@ -308,7 +309,7 @@ def evaluate_poly3d_quadratic_fit(
     return y_pred
 
 
-@njit(cache=True)
+@njit
 def evaluate_antoine_fit(
     T_c,
     A_antoine,
@@ -317,7 +318,7 @@ def evaluate_antoine_fit(
     return log_P_bar
 
 
-@njit(cache=True)
+@njit
 def invert_antoine_fit(
     log_P_bar,
     A_antoine,
@@ -326,7 +327,7 @@ def invert_antoine_fit(
     return T_c
 
 
-@njit(cache=True)
+@njit
 def gamma_draw(
     rng,
     mean,
@@ -342,7 +343,7 @@ def round_up_to_multiple(
 ):
     return int(math.ceil(number / multiple) * multiple)
 
-@njit(cache=True)
+@njit
 def erfinv(x):
     if x >= 1.0:
         return 5.0  # Safe high Z-score ceiling truncation

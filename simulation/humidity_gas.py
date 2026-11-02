@@ -6,7 +6,7 @@ Humidifier control, evaporator moisture exchange, CO2/O2 gas balance, moisture/f
 
 import math
 import numpy as np
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *

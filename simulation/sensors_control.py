@@ -6,14 +6,14 @@ Sensor filtering and control-loop primitives: exponential sensor filters, PID ev
 
 import math
 import numpy as np
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *
 from utils import numba_clip
 
 
-@njit(cache=True)
+@njit
 def get_sensor_filtered_value(
     rng,
     true_value,
@@ -29,7 +29,7 @@ def get_sensor_filtered_value(
     return numba_clip(filtered_value, lower_limit, upper_limit)
 
 
-@njit(cache=True)
+@njit
 def update_evaporator_air_velocity_sensor(
     rng,
     room_state_float64_vector,
@@ -62,7 +62,7 @@ def update_evaporator_air_velocity_sensor(
             )
         )
 
-@njit(cache=True)
+@njit
 def pid_evaluation(
     current_error,
     dt_sec,

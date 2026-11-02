@@ -120,3 +120,19 @@ seeds:
       column_types:
         dispatch_type_code: int64
         dispatch_type_name: string
+
+  - name: seed_compressor_switch_reason_reference
+    description: "Decodes compressor_events.switch_reason (why the compressor changed state)"
+    config:
+      column_types:
+        compressor_switch_reason_code: int64
+        compressor_switch_reason_name: string
+        compressor_switch_reason_description: string
+
+  - name: seed_defrost_termination_reason_reference
+    description: "Decodes defrost_events.termination_reason"
+    config:
+      column_types:
+        defrost_termination_reason_code: int64
+        defrost_termination_reason_name: string
+        defrost_termination_reason_description: string

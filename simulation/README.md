@@ -11,24 +11,35 @@ transmission loss.
 
 ```bash
 cd simulation
-pip install numpy numba pandas pyarrow scipy requests timezonefinder reverse_geocoder pycountry matplotlib
+pip install numpy numba pandas pyarrow scipy requests timezonefinder reverse_geocoder pycountry CoolProp matplotlib
 python run.py
 ```
 
-`run.py` has no command-line arguments. Edit the constants at the top of the file:
+`run.py` is a command-line script (`python run.py --help` lists everything):
 
-| Constant | Meaning |
+| Option | Meaning |
 |---|---|
-| `NUM_SIMUL_HOURS` | Length of one chunk of simulated time (default 72 h). |
-| `START_LOCAL_DATE` | Start of operations, used on the very first run only. |
-| `STARTING_FRUIT_TYPE`, `STARTING_REFRIGERANT` | Initial crop (blueberry or avocado) and refrigerant (R404A or R134a). |
-| `SEND_REQUEST` | `0` reads the committed `weather_data.parquet`; `1` downloads fresh weather from Open-Meteo. |
+| `--hours N` | Length of one chunk of simulated time (default 72). |
+| `--start-date ISO` | Facility-local start of operations. Cold start only; ignored when resuming. |
+| `--fruit {blueberry,avocado}`, `--refrigerant {r404a,r134a}` | Initial crop and refrigerant. Cold start only. |
+| `--run-dir PATH` | Where `state.npz`, `rng_state.json`, `run_outputs/` and `raw_parquets/` live (default: this folder). |
+| `--refresh-weather` | Download fresh weather from Open-Meteo instead of reading the committed `weather_data.parquet`. |
+| `--no-run-outputs` | Skip the multi-GB `run_outputs_chunk_NNNN.npz` diagnostic dump. |
+| `--smoke-test [MIN]` | Simulate only a few minutes (default 4) to warm the Numba cache. Writes nothing. |
+| `--no-cache`, `--clear-cache` | Ignore / delete the Numba compilation cache (see below). |
+| `--fastmath {safe,full,off}` | Numba fast-math level (default `safe`). |
 
-Each `python run.py` call continues from the state saved by the previous call (`state.npz`,
-`rng_state.json`), so consecutive calls produce consecutive chunks. With no saved state it
-cold-starts from `START_LOCAL_DATE` with the RNG seed in the config (`rng_seed: 42`). The first call
-includes Numba compile time. To start over, delete `state.npz`, `rng_state.json`, `run_outputs/` and
-`raw_parquets/`.
+Each call continues from the state saved by the previous call (`state.npz`, `rng_state.json`), so
+consecutive calls produce consecutive chunks. With no saved state it cold-starts from `--start-date`
+with the RNG seed in the config (`rng_seed: 42`). To start over, delete `state.npz`, `rng_state.json`,
+`run_outputs/` and `raw_parquets/`.
+
+**Numba cache.** Compiled functions are cached in `.numba_cache/<hash>-<level>/` (git-ignored). The
+hash covers every `.py` file and config in this folder, so editing any of them, including the shared
+constants that Numba's own cache does not track, recompiles automatically. `--no-cache` and
+`--clear-cache` are escape hatches and are rarely needed. A cold compile takes about a minute, a
+cached start a few seconds. Compilation uses `jit.py`; the `safe` fast-math level keeps NaN/Inf
+semantics, and a function can opt out with `@njit(fastmath=False)`.
 
 Each chunk writes:
 
@@ -76,7 +87,7 @@ Each chunk writes:
 |---|---|
 | `telemetry` | Long format (tag, value) from fixed room and plant instruments, 14 tags: room, return and supply air temperature, relative humidity, CO2, O2, suction and liquid line temperature and pressure, compressor power, evaporator coil temperature, evaporator air velocity. |
 | `batch_sensors` | Pallet-mounted pulp temperature (`t_pulp_c`) and load cell (`mass_kg`), polled every 10 minutes. |
-| `compressor_events`, `humidifier_events`, `door_events` | Controller and door event ledgers. |
+| `compressor_events`, `humidifier_events`, `door_events` | Controller and door event ledgers. Compressor events carry `switch_reason` (thermostat, defrost, downtime, low-pressure trip, airflow interlock); codes are decoded by the generated seed `seed_compressor_switch_reason_reference`. |
 | `lp_trip_events`, `defrost_events` | Low-pressure switch state changes and one row per defrost cycle. |
 | `crop_rotation_events`, `refrigerant_rotation_events`, `downtime_sequence_events` | Planned changeovers and downtime windows. |
 | `inbound_orders`, `outbound_orders`, `inbound_pallet_history`, `outbound_pallet_history` | Warehouse records. |

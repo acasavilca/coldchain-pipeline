@@ -14,7 +14,8 @@ renamed as (
         cast(loaded_at as timestamp) as ingested_at,
 
         -- compressor state
-        cast(is_active as boolean) as is_active
+        cast(is_active as boolean) as is_active,
+        cast(switch_reason as int64) as switch_reason_code
 
     from source
 )

@@ -6,7 +6,7 @@ Ambient forcing cache refresh plus room thermal balance: envelope/floor/infiltra
 
 import math
 import numpy as np
-from numba import njit
+from jit import njit
 
 from constants import *
 from matrix_index_maps import *

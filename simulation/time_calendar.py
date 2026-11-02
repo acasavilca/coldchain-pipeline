@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from numba import njit
+from jit import njit
 from timezonefinder import TimezoneFinder
 
 from matrix_index_maps import *
@@ -36,7 +36,7 @@ def encode_coordinates(lat: float, lon: float) -> str:
     return encoded_str
 
 
-@njit(cache=True)
+@njit
 def calculate_time_dependent_weights(
     year_local,
     month_local,
