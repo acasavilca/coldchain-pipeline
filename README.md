@@ -8,6 +8,27 @@ This repository started as a Data Engineering Zoomcamp project. The submitted ve
 [`zoomcamp-submission`](../../tree/zoomcamp-submission) (its Looker Studio dashboard no longer
 works). The current code is a ground-up rewrite around the physics-based simulator.
 
+## About the data
+
+The data is synthetic, but the simulator is not a closed refrigeration loop. Besides the physics
+(room heat balance, refrigerant cycle, evaporator frost and defrost, humidity and gas exchange), it
+models a facility that is operated by people and instrumented imperfectly:
+
+- **Stochastic operations**: truck arrivals and dispatches that vary by hour and weekday, doors left
+  open, scheduled downtime, and crop and refrigerant changeovers.
+- **Human behaviour**: drivers and employees whose fatigue (time of day, weekday, end of month) and
+  carelessness change their probability of making an error.
+- **Imperfect instrumentation**: sensor noise, per-sensor sampling intervals, background dropout,
+  per-channel outages and facility-wide outages on the sensor tables.
+- **Real weather**: outdoor conditions are real historical data for the configured site
+  ([Open-Meteo](https://open-meteo.com/)), and the indoor climate responds to them through the
+  envelope and the doors.
+
+Because the simulator knows what actually happened, its event ledgers can serve as ground truth for
+checking the marts, which real plant data does not allow (planned, see the roadmap). The simulator
+has not been validated against a real installation; see `simulation/README.md` for assumptions and
+limits.
+
 ## What is in the repo
 
 | Path | Contents |
@@ -53,22 +74,32 @@ works). The current code is a ground-up rewrite around the physics-based simulat
 
 ## Status
 
-Work in progress. The marts are built and tested for the incremental chain.
+Work in progress. The simulator, the raw layer and the BigQuery loading are working. The dbt marts
+for the facility's core operations (room conditions, compressor and humidifier cycles, doors,
+downtime, temperature compliance, inventory and orders) are built, and the incremental chain is
+checked against full refreshes. Column-level tests (`schema.yml`) are still to be added.
 
-The simulator models evaporator frost, electric defrost, low-pressure trips and the airflow
-interlock, and exports them as raw tables (`defrost_events`, `lp_trip_events`) and telemetry
-(`t_coil_evap_c`, `evap_air_velocity_m_s`). The dbt layer ingests these (staging models and
-sensor tags), but the models do not yet use them analytically. Every compressor state change in
+Evaporator frost, electric defrost, low-pressure trips and the airflow interlock were added to the
+simulator later, motivated by a separate long-running contract project (DataAnnotation). They are
+exported as raw tables (`defrost_events`, and `lp_trip_events` for low-pressure trips) and
+telemetry (`t_coil_evap_c`, `evap_air_velocity_m_s`). Every compressor state change in
 `compressor_events` carries a `switch_reason` (thermostat, defrost, downtime, low-pressure trip,
 airflow interlock), and the reason codes are decoded in the marts through seeds generated from the
-simulator config.
+simulator config. The dbt layer already ingests all of this (staging models, sensor tags, seeds).
+What remains is wiring it into the existing models, which reuses the established patterns more than
+it adds new modelling.
 
 ## Roadmap
 
-- **Defrost and trip analytics in dbt**: classify every compressor stop by cause using
-  `switch_reason` (thermostat, defrost, downtime, low-pressure trip, airflow interlock); defrost and trip windows in the state timeline;
-  defrost recovery and cause attribution in the compliance models; post-defrost handling and
-  airflow-ratio metrics in the compressor performance mart; per-defrost and per-trip fact tables.
-- **Tests and documentation**: `schema.yml` with column tests, defrost/trip sanity tests.
-- **Dashboard**: Evidence.dev on top of the marts.
-- **Orchestration**: Kestra flows for loading and running dbt.
+Items are listed in the order planned. Nothing below is marked done until it is merged.
+
+| # | Item | Status |
+|---|---|---|
+| 1 | **Defrost and low-pressure trip analytics in dbt**: wire the new raw tables into the existing models. Classify every compressor stop by cause using `switch_reason`; defrost and trip windows in the state timeline; defrost recovery and cause attribution in the compliance models; post-defrost handling and airflow-ratio metrics in the compressor performance mart; per-defrost and per-trip fact tables. | In progress |
+| 2 | **History generation**: simulate a long history as consecutive daily chunks (one UTC day each) and load it into BigQuery. | Planned |
+| 3 | **Tests and documentation**: `schema.yml` with column tests, defrost/trip sanity tests, and ground-truth checks of the marts against the simulator's event ledgers. | Planned |
+| 4 | **Dashboard**: Evidence.dev on top of the marts. | Planned |
+| 5 | **Containers and CI**: Dockerfile for the simulator, GitHub Actions for tests and `dbt build`. | Planned |
+| 6 | **Infrastructure as code**: Terraform for the storage bucket, BigQuery tables and service accounts, replacing the shell table-creation helper. | Planned |
+| 7 | **Orchestration**: Kestra flows that run the simulator for the previous day, load it, test it and run dbt. | Planned |
+| 8 | **v2, streaming and Spark**: refactor the simulator into a digital twin that streams its output through Kafka into Spark, alongside the BigQuery marts. | Planned |
