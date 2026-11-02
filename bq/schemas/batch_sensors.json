@@ -1,0 +1,48 @@
+[
+  {
+    "name": "timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "batch_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "pallet_slot",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "tag_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "value",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "unit",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "event_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "loaded_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  },
+  {
+    "name": "location_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  }
+]

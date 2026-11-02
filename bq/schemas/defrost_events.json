@@ -1,0 +1,12 @@
+[
+  {"name": "timestamp_ms", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "start_timestamp_ms", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "termination_reason", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "ice_melted_g", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "coil_ice_melted_g", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "pan_ice_melted_g", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "face_ice_shed_g", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "event_timestamp", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "loaded_at", "type": "TIMESTAMP", "mode": "NULLABLE", "defaultValueExpression": "CURRENT_TIMESTAMP()"},
+  {"name": "location_id", "type": "INTEGER", "mode": "NULLABLE"}
+]

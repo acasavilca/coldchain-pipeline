@@ -1,0 +1,43 @@
+[
+  {
+    "name": "timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "scheduled_start_timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "shutdown_timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ramp_up_start_timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ramp_up_end_timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "event_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "loaded_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  },
+  {
+    "name": "location_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  }
+]

@@ -1,0 +1,68 @@
+[
+  {
+    "name": "batch_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "parent_order_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "timestamp_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "quality_grade",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "pulp_temp_c",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "gross_start_kg",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "box_start_count",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "gross_moved_kg",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "box_moved_count",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "supervisor_intervention_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "event_timestamp",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "loaded_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "defaultValueExpression": "CURRENT_TIMESTAMP()"
+  },
+  {
+    "name": "location_id",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  }
+]

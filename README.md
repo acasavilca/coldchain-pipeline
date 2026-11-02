@@ -13,6 +13,7 @@ works). The current code is a ground-up rewrite around the physics-based simulat
 | Path | Contents |
 |---|---|
 | `simulation/` | Numba-JIT Python simulator: room thermal balance, refrigeration cycle (R404A/R134a polynomial fits), evaporator frost and electric defrost, humidity/CO2/O2, door and logistics events, sensor and telemetry-loss layers. Writes raw parquet tables. |
+| `bq/` | Shell helpers and table schemas for creating the raw BigQuery tables and loading the simulator's parquet chunks. |
 | `dbt_project/` | dbt project (BigQuery): `staging` views, `intermediate` models, `marts` (dimensions and facts), seeds generated from the simulator configs, and tests. |
 
 ## Raw tables produced by the simulator
@@ -44,7 +45,8 @@ works). The current code is a ground-up rewrite around the physics-based simulat
 1. Simulator: `simulation/run.py` is the entry point for one chunk of simulated time. Configuration
    lives in `simulation/configs/`. Dependencies include numpy, numba, pandas, pyarrow,
    timezonefinder, reverse_geocoder and pycountry.
-2. Load the raw parquet tables into a BigQuery dataset named `coldchain_raw`.
+2. Load the raw parquet tables into a BigQuery dataset named `coldchain_raw` with the helpers in
+   `bq/`: `bash bq/create_tables.sh` once, then `bash bq/load_chunks.sh <first> <last>` (see `bq/README.md`).
 3. `cd dbt_project && dbt deps && dbt seed && dbt build` with a profile named `coldchain_pipeline`.
    The source project and dataset names are in `dbt_project/models/staging/sources.yml`.
 
