@@ -315,8 +315,10 @@ def build_equipment_configurations_vectors(
     fan_curve_matrix,
     facility_cfg: Union[Dict[str, Any], str, Path] = "configs/facility_runtime_config.json",
     equipment_catalog: Union[Dict[str, Any], str, Path] = "configs/catalog_equipment_config.json",
-    location_id: Union[str, int, None] = None,
+    location_id: Union[str, int] = None,
 ):
+    if location_id is None:
+        raise ValueError("build_equipment_configurations_vectors: location_id is required")
     facility_cfg = _load_json_source(facility_cfg, "Runtime configuration file")
     equipment_catalog = _load_json_source(equipment_catalog, "Equipment catalog")
     comp, evap, cond = resolve_active_equipment(facility_cfg, equipment_catalog)
@@ -324,12 +326,8 @@ def build_equipment_configurations_vectors(
     v_float64 = np.zeros(N_EQ_FLOAT64_FIELDS, dtype=np.float64)
     v_int64 = np.zeros(N_EQ_INT64_FIELDS, dtype=np.int64)
 
-    if location_id is None:
-        location_id = str(facility_cfg["facility_location"]["active_location_id"])
-    else:
-        location_id = str(location_id)
-
-    loc = facility_cfg["facility_location"]["locations"][location_id] # NOTE: May need modification
+    location_id = str(location_id)
+    loc = facility_cfg["facility_location"]["locations"][location_id]
     hw = facility_cfg["refrigeration_and_humidifier_hardware"]
     sens = facility_cfg["digital_sensor_monitoring_profiles"]
     aux = facility_cfg["auxiliary_environmental_hardware"]
@@ -1212,7 +1210,10 @@ def build_all_parameter_arrays(
     facility_cfg: Union[Dict[str, Any], str, Path] = "configs/facility_runtime_config.json",
     equipment_catalog: Union[Dict[str, Any], str, Path] = "configs/catalog_equipment_config.json",
     respiration_db: Union[Dict[str, Any], str, Path] = "configs/fruit_respiration_curves.json",
+    location_id: Union[str, int] = None,
 ):
+    if location_id is None:
+        raise ValueError("build_all_parameter_arrays: location_id is required")
     facility_cfg = _load_json_source(facility_cfg, "Runtime configuration file")
     equipment_catalog = _load_json_source(equipment_catalog, "Equipment catalog")
     respiration_db = _load_json_source(respiration_db, "Respiration database")
@@ -1232,7 +1233,7 @@ def build_all_parameter_arrays(
     ) = build_fruit_parameter_arrays(facility_cfg, respiration_db)
     refrigerant_properties_matrix, refrigerant_surfaces_matrix = build_complete_thermodynamic_refrigerant_pool(facility_cfg, equipment_catalog)
     evaporator_fan_curve_matrix = build_evaporator_fan_curve_matrix(facility_cfg, equipment_catalog_path="configs/catalog_equipment_config.json", fits_output_dir="./polynomial_surfaces")
-    equipment_configurations_float64_vector, equipment_configurations_int64_vector = build_equipment_configurations_vectors(evaporator_fan_curve_matrix, facility_cfg, equipment_catalog)
+    equipment_configurations_float64_vector, equipment_configurations_int64_vector = build_equipment_configurations_vectors(evaporator_fan_curve_matrix, facility_cfg, equipment_catalog, location_id)
 
     return dict(
         room_configurations_float64_vector      = room_configurations_float64_vector,
