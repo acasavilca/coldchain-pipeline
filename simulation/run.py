@@ -39,6 +39,7 @@ DEFAULT_HOURS = 72
 DEFAULT_START_DATE = "2025-05-01T03:00:00"   # local time at the facility; cold start only
 SMOKE_TEST_DEFAULT_MINUTES = 4
 MS_PER_DAY = 86_400_000
+MAX_CHUNK_HOURS = 72   # memory grows with chunk length (~1.5 GB per simulated day); longer needs --allow-large-chunk
 
 # raw table name -> key in schemas/table_schemas.json
 SCHEMA_KEY_MAP = {
@@ -68,6 +69,8 @@ def parse_args(argv=None) -> argparse.Namespace:
                         help=f"simulated hours in this chunk (default {DEFAULT_HOURS} if neither --hours nor --days is given)")
     length.add_argument("--days", type=int, default=None,
                         help="simulated whole UTC days in this chunk; the chunk must start at 00:00 UTC (daily mode)")
+    p.add_argument("--allow-large-chunk", action="store_true",
+                   help=f"permit a chunk longer than {MAX_CHUNK_HOURS} h (needs about 1.5 GB of RAM per simulated day)")
     p.add_argument("--align-first", action="store_true",
                    help="with --days on a cold start not at 00:00 UTC: run only up to the next 00:00 UTC")
     p.add_argument("--weather-only", action="store_true",
@@ -239,6 +242,11 @@ def run(args: argparse.Namespace) -> None:
     else:
         end_ms = int(start_ms + C.MS_PER_HOUR * (args.hours if args.hours is not None else DEFAULT_HOURS))
     sim_hours = (end_ms - start_ms) / C.MS_PER_HOUR
+    if sim_hours > MAX_CHUNK_HOURS and not args.allow_large_chunk and not args.weather_only:
+        raise SystemExit(
+            f"error: a {sim_hours:.4g} h chunk needs roughly {sim_hours / 24 * 1.5 + 0.4:.0f} GB of RAM (about 1.5 GB per "
+            f"simulated day) because the 0.1 s output arrays are held in memory for the whole chunk. Run one day per "
+            f"call in a loop (`--days 1`), or pass --allow-large-chunk if you have the memory.")
     print(f"start: {_to_datetime_str(start_ms)}\nend:   {_to_datetime_str(end_ms)}")
 
     if args.refresh_weather and not smoke:
@@ -369,6 +377,11 @@ def run(args: argparse.Namespace) -> None:
             frame["event_timestamp"] = pd.to_datetime(frame["timestamp_ms"], unit="ms")
             frame = enforce_dtypes(frame, schema["dtypes"], schema["datetime_cols"])
         frame = fix_timestamps(frame)
+        if schema is not None and frame.empty:
+            # an empty frame can carry stray all-null columns (e.g. batch_sensors gets a "timestamp" column when no
+            # pallet is in the room); BigQuery refuses a load that adds fields to the table, so keep the schema's columns
+            keep = set(schema["dtypes"]) | {"location_id", "event_timestamp"}
+            frame = frame[[c for c in frame.columns if c in keep]]
         frame.to_parquet(raw_dir / f"{name}.parquet", engine="pyarrow")
         row_counts[name] = int(len(frame))
     # Manifest: lets a downstream gate check completeness and provenance before loading.
