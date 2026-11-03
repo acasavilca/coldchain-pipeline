@@ -147,7 +147,7 @@ joined as (
 )
 
 select
-    {{ dbt_utils.generate_surrogate_key(['j.location_id', 'j.reading_hour_utc']) }} as room_conditions_hk,
+    {{ dbt_utils.generate_surrogate_key(['j.location_id', 'j.active_fruit_type_code', 'j.reading_hour_utc']) }} as room_conditions_hk,
     j.location_id,
     j.active_fruit_type_code,
     crop.fruit_name as active_fruit_name,

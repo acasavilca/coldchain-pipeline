@@ -10,11 +10,12 @@
 # The dbt staging models keep only the latest row per key, so duplicates are harmless downstream,
 # but they do re-trigger incremental recomputation for those days.
 # Every chunk's run_manifest.json is checked first (row counts and file checksums), and a chunk
-# whose manifest location does not match the run directory is refused.
+# whose manifest location does not match the run directory is refused, and so is one whose parquet columns
+# are not all in the BigQuery table schema.
 set -euo pipefail
 
 PROJECT="${PROJECT:-fruit-packing-plant-simulator}"
-DATASET="${DATASET:-coldchain_raw}"
+DATASET="${DATASET:-coldchain_scratch}" # coldchain_raw
 
 TABLES=(
   telemetry batch_sensors
@@ -43,11 +44,15 @@ RAW_DIR="$RUN_DIR/raw_parquets"
 [[ -f "$RUN_DIR/run_meta.json" ]] || { echo "$RUN_DIR has no run_meta.json (not a run directory)" >&2; exit 1; }
 
 # Verify first, load second: nothing is loaded if any requested chunk fails its manifest check.
-python3 - "$RUN_DIR" "$FIRST" "$LAST" <<'PY'
+python3 - "$RUN_DIR" "$FIRST" "$LAST" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/schemas" <<'PY'
 import hashlib, json, sys
 from pathlib import Path
 import pyarrow.parquet as pq
 run_dir, first, last = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+schemas_dir = Path(sys.argv[4])
+# table -> schema file, as in create_tables.sh
+SCHEMA_OF = {"inbound_orders": "orders", "outbound_orders": "orders",
+             "inbound_pallet_history": "pallet_history", "outbound_pallet_history": "pallet_history"}
 loc = json.loads((run_dir / "run_meta.json").read_text())["location_id"]
 for i in range(first, last + 1):
     d = run_dir / "raw_parquets" / f"chunk_{i:04d}"
@@ -59,8 +64,14 @@ for i in range(first, last + 1):
         h = hashlib.sha256(f.read_bytes()).hexdigest()
         if h != m["sha256"][name]:
             sys.exit(f"{f}: checksum differs from the manifest")
-        if pq.ParquetFile(f).metadata.num_rows != rows:
+        pf = pq.ParquetFile(f)
+        if pf.metadata.num_rows != rows:
             sys.exit(f"{f}: row count differs from the manifest")
+        # BigQuery refuses a load that adds columns to the table: check the names before loading anything
+        table_cols = {c["name"] for c in json.loads((schemas_dir / f"{SCHEMA_OF.get(name, name)}.json").read_text())}
+        extra = sorted(set(pf.schema_arrow.names) - table_cols)
+        if extra:
+            sys.exit(f"{f}: columns not in the BigQuery table schema: {extra}")
 print(f"manifests ok for chunks {first}..{last} of location {loc}")
 PY
 
