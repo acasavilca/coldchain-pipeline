@@ -6,10 +6,11 @@
   },
 
   "facility_location": {
-    "active_location_id": 1,
+    "default_location_id": 1,
     "locations": {
       "1": {
         "id_code": 1,
+        "rng_seed": 42,
         "name": "Chao (Virú Valley)",
         "latitude": -8.5771,
         "longitude": -78.5661,
@@ -18,6 +19,7 @@
       },
       "2": {
         "id_code": 2,
+        "rng_seed": 1002,
         "name": "Ica (Villacurí Valley)",
         "latitude": -14.0678,
         "longitude": -75.7286,
@@ -26,6 +28,7 @@
       },
       "3": {
         "id_code": 3,
+        "rng_seed": 1003,
         "name": "Chincha",
         "latitude": -13.4167,
         "longitude": -76.1333,
@@ -34,6 +37,7 @@
       },
       "4": {
         "id_code": 4,
+        "rng_seed": 1004,
         "name": "Arequipa (Majes / Pedregal Valley)",
         "latitude": -16.3235,
         "longitude": -72.2081,
@@ -60,8 +64,7 @@
     "numerical_solver_tolerance": 1e-2,
     "forcing_arrays_resample_interval_sec": 60.0,
     "required_weather_measurements": "temperature_2m,relative_humidity_2m,wind_speed_10m,shortwave_radiation,dewpoint_2m,surface_pressure,soil_temperature_54cm",
-    "leak_noise_factor_resample_interval_sec": 60.0,
-    "rng_seed": 42
+    "leak_noise_factor_resample_interval_sec": 60.0
   },
   
   "room_structural_geometry": {

@@ -24,12 +24,13 @@ dbt_project/baseline_run_results.json
 run_outputs/
 selected_run_outputs/
 raw_parquets/
+simulation/runs/
 plots/
 *_run/
 simulation/validation/
 *.npz
 *.parquet
-# the two weather caches are small (~150 KB) inputs that run.py reads when SEND_REQUEST=0
+# the per-location weather caches (simulation/weather/location_<id>/) are small (~150 KB) inputs that run.py reads
 !weather_data.parquet
 !raw_weather_data.parquet
 *.pkl

@@ -36,7 +36,7 @@ def retrieve_satellite_data(
     timezone_param=None,
     facility_cfg: Union[Dict[str, Any], str, Path] = "configs/facility_runtime_config.json",
     table_schema: Union[Dict[str, Any], str, Path] = "schemas/table_schemas.json",
-    active_location_id: int | None = None,
+    active_location_id: int = None,
     frequency: str = "hourly",
     is_backfill: bool = False,
     earliest_date_with_available_data: str = "2021-03-23",
@@ -61,10 +61,7 @@ def retrieve_satellite_data(
     
     location_cfg = facility_cfg["facility_location"]
     if active_location_id is None:
-        active_location_id = location_cfg["active_location_id"]
-
-    if active_location_id is None:
-        raise ValueError("No active location ID provided or found in config.")
+        raise ValueError("retrieve_satellite_data: active_location_id is required")
 
     location = location_cfg["locations"][str(active_location_id)]
 
@@ -371,7 +368,7 @@ def prepare_forcing_arrays(sim_start_ms, sim_end_ms, weather_data: Union[pd.Data
     # )
 
 
-def join_downtimes(facility_cfg: Union[Dict[str, Any], str, Path] = "configs/facility_runtime_config.json", input_schedule: Union[Dict[str, Any], str, Path] = "configs/downtime_schedule.json", state_file_path: Optional[Union[str, Path]] = "state.npz"):
+def join_downtimes(facility_cfg: Union[Dict[str, Any], str, Path] = "configs/facility_runtime_config.json", location_id: Union[int, str] = None, input_schedule: Union[Dict[str, Any], str, Path] = "configs/downtime_schedule.json", state_file_path: Optional[Union[str, Path]] = "state.npz"):
     if isinstance(facility_cfg, (str, Path)):
         cfg_path = Path(facility_cfg)
         if not cfg_path.exists():
@@ -390,7 +387,8 @@ def join_downtimes(facility_cfg: Union[Dict[str, Any], str, Path] = "configs/fac
     if not isinstance(input_schedule, dict):
         raise TypeError("input_schedule must resolve to a valid dictionary source.")
 
-    location_id = facility_cfg["facility_location"]["active_location_id"]
+    if location_id is None:
+        raise ValueError("join_downtimes: location_id is required")
     location = facility_cfg["facility_location"]["locations"][str(location_id)]
 
     iana_tz_str = get_iana_timezone(location["latitude"], location["longitude"])
