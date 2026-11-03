@@ -32,36 +32,39 @@ sources:
       - name: defrost_events
         description: "One row per electric defrost cycle: start/end, termination reason, and ice melted/shed (grams)."
 
+      # order_id and batch_id are per-room counters, so they repeat across locations: the key is (location_id, id)
       - name: inbound_orders
+        data_tests:
+          - dbt_utils.unique_combination_of_columns:
+              arguments:
+                combination_of_columns: [location_id, order_id]
         columns:
+          - name: location_id
+            data_tests: [not_null]
           - name: order_id
-            data_tests: [not_null, unique]
+            data_tests: [not_null]
 
       - name: outbound_orders
+        data_tests:
+          - dbt_utils.unique_combination_of_columns:
+              arguments:
+                combination_of_columns: [location_id, order_id]
         columns:
+          - name: location_id
+            data_tests: [not_null]
           - name: order_id
-            data_tests: [not_null, unique]
+            data_tests: [not_null]
 
       - name: inbound_pallet_history
         columns:
           - name: batch_id
             data_tests: [not_null]
-          - name: parent_order_id
-            data_tests:
-              - relationships:
-                  arguments:
-                    to: source('coldchain_raw', 'inbound_orders')
-                    field: order_id
+          # parent_order_id -> order_id is checked per location in tests/assert_inbound_pallet_parent_order_exists.sql
 
       - name: outbound_pallet_history
         columns:
           - name: batch_id
             tests: [not_null]
-          - name: parent_order_id
-            tests:
-              - relationships:
-                  arguments:
-                    to: source('coldchain_raw', 'outbound_orders')
-                    field: order_id
+          # parent_order_id -> order_id is checked per location in tests/assert_outbound_pallet_parent_order_exists.sql
 
       - name: weather_data
