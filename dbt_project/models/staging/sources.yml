@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: coldchain_raw
     database: fruit-packing-plant-simulator
-    schema: coldchain_raw
+    schema: "{{ var('raw_dataset', 'coldchain_raw') }}"
     tables:
       - name: telemetry
         description: "Long-format tag/timestamp/value telemetry from refrigeration cycle + room sensors."

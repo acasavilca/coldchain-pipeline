@@ -16,5 +16,9 @@ inbound/outbound tables). They must match `simulation/schemas/table_schemas.json
 `event_timestamp` and `loaded_at` columns the pipeline adds, so update both together when a raw
 table changes.
 
-After a schema change (for example the `switch_reason` column on `compressor_events`), rerun
-`bash bq/create_tables.sh` before loading. It recreates the tables, so reload your chunks afterwards.
+`create_tables.sh` never alters or recreates existing tables (`bq mk --force` skips them). After a
+schema change (for example the `switch_reason` column on `compressor_events`), either add the column in
+place, `ALTER TABLE <dataset>.compressor_events ADD COLUMN switch_reason INT64`, or drop the table and
+rerun `bash bq/create_tables.sh`, then reload your chunks. To keep an existing dataset untouched, point
+`DATASET` at a new one: create it first with `bq mk --dataset --location=<same as the other datasets>
+<project>:<dataset>`, then run the two scripts with `DATASET=<dataset>`.
