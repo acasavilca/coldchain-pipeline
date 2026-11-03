@@ -5,8 +5,7 @@ data for a fruit-packing facility's cold rooms, and a dbt + BigQuery project tur
 analytics-ready marts.
 
 This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
-[`zoomcamp-submission`](../../tree/zoomcamp-submission) (its Looker Studio dashboard no longer
-works). The current code is a ground-up rewrite around the physics-based simulator.
+[`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
 
 ## About the data
 
