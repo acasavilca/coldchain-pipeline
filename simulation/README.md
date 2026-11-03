@@ -19,20 +19,19 @@ python run.py
 
 | Option | Meaning |
 |---|---|
-| `--hours N` | Length of one chunk of simulated time (default 72). |
+| `--location ID` | Which site (id in `facility_location.locations`). Cold start: defaults to `default_location_id` and prints a message saying so. Resume: must match the run directory. |
+| `--seed N` | RNG seed. Cold start only (an error on a resume). Default: the location's `rng_seed` in the config. |
+| `--hours N` / `--days N` | Length of one chunk (default 72 h). `--days` is the daily mode: whole UTC days, and the chunk must start at 00:00 UTC. The two are mutually exclusive. |
+| `--align-first` | With `--days` on a cold start that is not at 00:00 UTC: run only up to the next 00:00 UTC. |
 | `--start-date ISO` | Facility-local start of operations. Cold start only; ignored when resuming. |
 | `--fruit {blueberry,avocado}`, `--refrigerant {r404a,r134a}` | Initial crop and refrigerant. Cold start only. |
-| `--run-dir PATH` | Where `state.npz`, `rng_state.json`, `run_outputs/` and `raw_parquets/` live (default: this folder). |
-| `--refresh-weather` | Download fresh weather from Open-Meteo instead of reading the committed `weather_data.parquet`. |
+| `--run-dir PATH` | Where the state and outputs live (default: `runs/location_<id>/`, git-ignored). |
+| `--refresh-weather` | Download weather for this chunk from Open-Meteo and overwrite the location's cache, instead of reading it. |
+| `--weather-only` | Download the weather for the period (`--hours`/`--days` from the start) into the location's cache and exit without simulating. Use it to fetch a long period once. |
 | `--no-run-outputs` | Skip the multi-GB `run_outputs_chunk_NNNN.npz` diagnostic dump. |
 | `--smoke-test [MIN]` | Simulate only a few minutes (default 4) to warm the Numba cache. Writes nothing. |
 | `--no-cache`, `--clear-cache` | Ignore / delete the Numba compilation cache (see below). |
 | `--fastmath {safe,full,off}` | Numba fast-math level (default `safe`). |
-
-Each call continues from the state saved by the previous call (`state.npz`, `rng_state.json`), so
-consecutive calls produce consecutive chunks. With no saved state it cold-starts from `--start-date`
-with the RNG seed in the config (`rng_seed: 42`). To start over, delete `state.npz`, `rng_state.json`,
-`run_outputs/` and `raw_parquets/`.
 
 **Numba cache.** Compiled functions are cached in `.numba_cache/<hash>-<level>/` (git-ignored). The
 hash covers every `.py` file and config in this folder, so editing any of them, including the shared
@@ -41,9 +40,36 @@ constants that Numba's own cache does not track, recompiles automatically. `--no
 cached start a few seconds. Compilation uses `jit.py`; the `safe` fast-math level keeps NaN/Inf
 semantics, and a function can opt out with `@njit(fastmath=False)`.
 
+## Locations and run directories
+
+One run directory simulates one location. The default is `simulation/runs/location_<id>/`, so locations
+never share state and can run as separate processes in parallel (about 2 GB of RAM per simulated day).
+
+- **State and identity.** Each call continues from the state saved by the previous call (`state.npz`,
+  `rng_state.json`), so consecutive calls produce consecutive chunks. The cold start also writes
+  `run_meta.json` (location, seed, start time). A resume reads it: a mismatched `--location` is an
+  error, and a `state.npz` without `run_meta.json` (from before multi-location support) is refused,
+  because its location and seed are unknown. To start over, delete the run directory's `state.npz`,
+  `rng_state.json`, `run_meta.json`, `run_outputs/` and `raw_parquets/`.
+- **Seeds.** A cold start uses `--seed` or else the location's `rng_seed` in the config (location 1:
+  42, the others differ). If a sibling run directory already uses the same seed, a warning is printed:
+  two runs with the same seed draw the same random sequence.
+- **Weather.** Cached per location in `weather/location_<id>/` (`weather_data.parquet` for the
+  simulator, `raw_weather_data.parquet` for BigQuery). `run.py` refuses a cache whose `location_id` is
+  a different location or that does not cover the chunk. The committed cache is location 1 only
+  (2024-12-30 to 2026-01-02); for another location, or a longer period, fetch it once with
+  `python run.py --location 2 --start-date 2025-04-30T19:00:00 --days 400 --weather-only`.
+- **Daily mode.** `--days N` makes every chunk whole UTC days, so a chunk maps onto BigQuery's day
+  partitions. A cold start that is not at 00:00 UTC is refused unless `--align-first` is given, which
+  runs only up to the next midnight. A resume must begin at 00:00 UTC; if it does not, the error says
+  how many `--hours` reach the next midnight.
+- **Run manifest.** Every chunk also writes `raw_parquets/chunk_NNNN/run_manifest.json`: location, seed,
+  start and end (UTC), row count and SHA-256 per table, the code fingerprint (`jit.source_fingerprint`),
+  the facility-config hash and the fast-math level. `bq/load_chunks.sh` checks it before loading.
+
 Each chunk writes:
 
-- `raw_parquets/chunk_NNNN/<table>.parquet`, the raw tables that get loaded into BigQuery.
+- `raw_parquets/chunk_NNNN/<table>.parquet` and `run_manifest.json`, the raw tables that get loaded into BigQuery.
 - `run_outputs/run_outputs_chunk_NNNN.npz`, the full-resolution internal arrays, used only for plotting and
   debugging. At 0.1 s resolution a chunk is several GB, so this folder is git-ignored.
 
@@ -106,7 +132,7 @@ ledgers do not, because they are systems of record.
 
 | File | Content |
 |---|---|
-| `configs/facility_runtime_config.json` | Site, room geometry, hardware control settings, sensor profiles, crops, workforce, logistics, runtime settings. |
+| `configs/facility_runtime_config.json` | Sites (`facility_location.locations`, each with its own `rng_seed`, and `default_location_id`), room geometry, hardware control settings, sensor profiles, crops, workforce, logistics, runtime settings. |
 | `configs/catalog_equipment_config.json` | Compressors, evaporators, condensers and fans with datasheet data. Which ones are active is set by `active_equipment_id_selection` in the facility config. |
 | `configs/fruit_respiration_curves.json` | Respiration curves per crop. |
 | `configs/downtime_schedule.json` | Scheduled downtime windows. |

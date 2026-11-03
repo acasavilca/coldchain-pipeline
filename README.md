@@ -63,12 +63,15 @@ limits.
 
 ## Running
 
-1. Simulator: `python simulation/run.py` simulates one chunk of time (`--hours`, `--smoke-test`,
-   `--run-dir` and more; see `simulation/README.md`). Configuration lives in `simulation/configs/`.
+1. Simulator: `python simulation/run.py --location 1 --days 1` simulates one UTC day of one location and
+   continues from its saved state next time (`--hours`, `--seed`, `--smoke-test` and more; see
+   `simulation/README.md`). Each location has its own run directory and weather cache, so locations
+   can run in parallel. Configuration lives in `simulation/configs/`.
    Dependencies include numpy, numba, pandas, pyarrow, CoolProp, timezonefinder, reverse_geocoder
    and pycountry. Numba compilation is cached automatically (about a minute on a cold start).
 2. Load the raw parquet tables into a BigQuery dataset named `coldchain_raw` with the helpers in
-   `bq/`: `bash bq/create_tables.sh` once, then `bash bq/load_chunks.sh <first> <last>` (see `bq/README.md`).
+   `bq/`: `bash bq/create_tables.sh` once, then
+   `bash bq/load_chunks.sh simulation/runs/location_1 <first> <last>` (see `bq/README.md`).
 3. `cd dbt_project && dbt deps && dbt seed && dbt build` with a profile named `coldchain_pipeline`.
    The source project and dataset names are in `dbt_project/models/staging/sources.yml`.
 
@@ -96,10 +99,9 @@ Items are listed in the order planned. Nothing below is marked done until it is 
 | # | Item | Status |
 |---|---|---|
 | 1 | **Defrost and low-pressure trip analytics in dbt**: wire the new raw tables into the existing models. Classify every compressor stop by cause using `switch_reason`; defrost and trip windows in the state timeline; defrost recovery and cause attribution in the compliance models; post-defrost handling and airflow-ratio metrics in the compressor performance mart; per-defrost and per-trip fact tables. | In progress |
-| 2 | **History generation**: simulate a long history as consecutive daily chunks (one UTC day each) and load it into BigQuery. | Planned |
-| 3 | **Tests and documentation**: `schema.yml` with column tests, defrost/trip sanity tests, and ground-truth checks of the marts against the simulator's event ledgers. | Planned |
-| 4 | **Dashboard**: Evidence.dev on top of the marts. | Planned |
-| 5 | **Containers and CI**: Dockerfile for the simulator, GitHub Actions for tests and `dbt build`. | Planned |
-| 6 | **Infrastructure as code**: Terraform for the storage bucket, BigQuery tables and service accounts, replacing the shell table-creation helper. | Planned |
-| 7 | **Orchestration**: Kestra flows that run the simulator for the previous day, load it, test it and run dbt. | Planned |
-| 8 | **v2, streaming and Spark**: refactor the simulator into a digital twin that streams its output through Kafka into Spark, alongside the BigQuery marts. | Planned |
+| 2 | **Docker**: one simulator image, used locally with Compose, in CI and later as a cloud job. | Planned |
+| 3 | **History generation**: simulate a long history for several locations as consecutive daily chunks (one UTC day each; daily mode and multi-location support are in the simulator) and load it into BigQuery. | Planned |
+| 4 | **Unattended daily run**: Kestra triggers separate jobs that simulate the next day, load it behind completeness gates and run dbt, with state kept in versioned storage. | Planned |
+| 5 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks of the marts against the simulator's event ledgers, and an Evidence.dev dashboard. | Planned |
+| 6 | **CI and infrastructure as code**: GitHub Actions for tests and `dbt build`; Terraform for the bucket, BigQuery tables and service accounts. | Planned |
+| 7 | **v2, streaming and Spark**: refactor the simulator into a digital twin that streams its output through Kafka into Spark, alongside the BigQuery marts. | Planned |
