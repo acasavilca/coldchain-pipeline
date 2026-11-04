@@ -76,13 +76,13 @@ Each chunk writes:
 ## What a run does
 
 1. **Configs to arrays** (`array_builders.py`): the JSON configs become flat NumPy vectors and matrices, which is
-   the form Numba needs. Equipment is picked from the catalog by id (`active_equipment_id_selection`).
+   the form Numba needs. Equipment is picked from the catalog by ID (`active_equipment_id_selection`).
 2. **Setup** (`run_setup.py`): weather retrieval and resampling into forcing arrays, downtime and
-   crop/refrigerant rotation schedules, and first-run state initialisation.
+   crop/refrigerant rotation schedules, and first-run state initialization.
 3. **Step loop** (`engine.py`, `run_simulator`): every 0.1 s it updates ambient forcing, room and
    fruit thermal balance, humidity and gas balance, the refrigeration cycle, evaporator frost and
    defrost, sensors and control loops, and the logistics (arrivals, dispatches, doors, workers).
-   `output_writer.py` logs the step into preallocated output arrays.
+   `output_writer.py` logs the step into pre-allocated output arrays.
 4. **Raw data layer** (`scadafier.py`, `nullifier.py`): converts the arrays into long tag/timestamp/value
    telemetry (each sensor is only written at its own sampling interval) and tidy event and
    business tables, then applies simulated transmission loss to the sensor tables only.
@@ -147,11 +147,11 @@ python generate_dbt_seeds.py     # writes ../dbt_project/seeds/*.csv
 ## Checking a run
 
 - `python inspect_outputs.py [--out-dir run_outputs] [--plots-dir plots]` plots room and
-  refrigeration behaviour, frost and defrost diagnostics, solver health, inventory and
+  refrigeration behavior, frost and defrost diagnostics, solver health, inventory and
   events, and sensor traces from the saved `run_outputs/` chunks.
 - `python tools/compare_telemetry.py baseline.parquet new.parquet` compares two telemetry files row
   by row. Two runs from the same state, seed and config must be identical (exit code 0). It is the
-  regression check for code changes that should not alter behaviour.
+  regression check for code changes that should not alter behavior.
 
 ## Tools (offline calibration)
 

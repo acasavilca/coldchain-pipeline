@@ -15,7 +15,7 @@ models a facility that is operated by people and instrumented imperfectly:
 
 - **Stochastic operations**: truck arrivals and dispatches that vary by hour and weekday, doors left
   open, scheduled downtime, and crop and refrigerant changeovers.
-- **Human behaviour**: drivers and employees whose fatigue (time of day, weekday, end of month) and
+- **Human behavior**: drivers and employees whose fatigue (time of day, weekday, end of month) and
   carelessness change their probability of making an error.
 - **Imperfect instrumentation**: sensor noise, per-sensor sampling intervals, background dropout,
   per-channel outages and facility-wide outages on the sensor tables.
@@ -82,7 +82,7 @@ downtime, temperature compliance, inventory and orders) are built, and the incre
 checked against full refreshes. Column-level tests (`schema.yml`) are still to be added.
 
 Evaporator frost, electric defrost, low-pressure trips and the airflow interlock were added to the
-simulator later, motivated by a separate long-running contract project (DataAnnotation). They are
+simulator later, motivated by a separate long-running contract project in DataAnnotation. They are
 exported as raw tables (`defrost_events`, and `lp_trip_events` for low-pressure trips) and
 telemetry (`t_coil_evap_c`, `evap_air_velocity_m_s`). Every compressor state change in
 `compressor_events` carries a `switch_reason` (thermostat, defrost, downtime, low-pressure trip,
