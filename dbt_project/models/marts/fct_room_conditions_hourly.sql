@@ -89,8 +89,9 @@ temp_excursion_by_hour as (
         location_id,
         timestamp_trunc(phase_start_ts, hour) as excursion_hour_utc,
         sum(total_phase_duration_msec) / 1000.0 as total_excursion_duration_sec,
-        avg(total_phase_duration_msec) / 1000.0 as avg_excursion_duration_sec,
-        count(*) as excursion_count,
+        sum(total_phase_duration_msec) / 1000.0 / count(distinct excursion_id) as avg_excursion_duration_sec,
+        -- avg(total_phase_duration_msec) / 1000.0 as avg_excursion_duration_sec,
+        count(distinct excursion_id) as excursion_count,
         max(ingested_at) as ingested_at
     from {{ ref('int_temperature_excursion_events_enriched') }}
     where
