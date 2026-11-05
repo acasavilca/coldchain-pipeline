@@ -20,6 +20,7 @@ from typing import Dict, List
 
 import numpy as np
 
+from constants import MAX_EPOCH_TIMESTAMP_MS
 from matrix_index_maps import (
     IDX_ROOM_EPHEMERAL_INBOUND_ORDER_ROW_IDX,
     IDX_ROOM_EPHEMERAL_OUTBOUND_ORDER_ROW_IDX,
@@ -60,6 +61,26 @@ LEDGER_COUNTERS = {
 
 UNTRIMMED_KEYS = ("output_int64_matrix", "output_float64_matrix")
 
+# Ledgers whose row is filled over several steps and only counted when complete. A row still
+# open at the end of a chunk sits at index == counter and would be cut off by [:counter].
+# The downtime sequence is the only such ledger (scheduled start, shutdown, ramp-up start and
+# end are written hours apart; the counter advances at ramp-up end). Every other ledger writes
+# a whole row and advances its counter in the same step.
+OPEN_ROW_LEDGERS = ("downtime_sequence_event_ledger",)
+
+
+def _ledger_row_count(key: str, ledger: np.ndarray, counter_value: int) -> int:
+    """Rows to export: the counter, plus one if the row at the counter was started but not finished.
+
+    An open row has its already-written fields set and the rest still at the sentinel, so it
+    exports with NULLs for the unfinished stages. The next chunk writes the remaining stages into
+    its own row, and dbt (int_downtime_windows) joins the pieces.
+    """
+    n_rows = int(counter_value)
+    if key in OPEN_ROW_LEDGERS and n_rows < ledger.shape[0] and np.any(ledger[n_rows] != MAX_EPOCH_TIMESTAMP_MS):
+        n_rows += 1
+    return n_rows
+
 
 def _trim_telemetry(telemetry_matrix: np.ndarray, room_ephemeral_int64_vector: np.ndarray) -> np.ndarray:
     """Keep only the rows actually written (one per sensor polling tick)."""
@@ -81,7 +102,7 @@ def trim_run_outputs(ephemeral_arrays: Dict[str, np.ndarray]) -> Dict[str, np.nd
     room_ephemeral_int64_vector = ephemeral_arrays["room_ephemeral_int64_vector"]
     trimmed = {}
     for key, counter_idx in LEDGER_COUNTERS.items():
-        n_rows = int(room_ephemeral_int64_vector[counter_idx])
+        n_rows = _ledger_row_count(key, ephemeral_arrays[key], room_ephemeral_int64_vector[counter_idx])
         trimmed[key] = ephemeral_arrays[key][:n_rows]
     trimmed["room_telemetry_matrix"] = _trim_telemetry(ephemeral_arrays["room_telemetry_matrix"], room_ephemeral_int64_vector)
     for key in UNTRIMMED_KEYS:
@@ -132,7 +153,7 @@ def load_run_outputs(out_dir: str = "run_outputs") -> Dict[str, np.ndarray]:
                     # Saved chunks from before this ledger existed remain inspectable.
                     collected.setdefault(key, []).append(np.empty((0, N_DEFROST_EVENT_FIELDS), dtype=np.int64))
                     continue
-                n_rows = int(room_ephemeral_int64_vector[counter_idx])
+                n_rows = _ledger_row_count(key, data[key], room_ephemeral_int64_vector[counter_idx])
                 collected.setdefault(key, []).append(data[key][:n_rows])
 
             collected.setdefault("room_telemetry_matrix", []).append(
