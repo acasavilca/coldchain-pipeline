@@ -7,6 +7,66 @@ analytics-ready marts.
 This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
 [`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
 
+```mermaid
+flowchart LR
+  KES["Kestra OSS on a small VM<br/>schedule, catch-up, alerts"]
+
+  subgraph J1["Job 1: simulate"]
+    direction TB
+    WX["Open-Meteo weather<br/>(per-location cache)"]
+    SIM["Numba simulator<br/>daily mode, multi-location"]
+    STATE[("State<br/>state.npz + rng_state.json")]
+    WX --> SIM
+    STATE <--> SIM
+  end
+
+  subgraph J2["Job 2: load and gate"]
+    direction TB
+    PQ["Raw parquet + run manifest"]
+    LOAD["Loader<br/>manifest + column checks"]
+    RAW[("BigQuery<br/>coldchain_raw")]
+    GATE{{"Raw-layer gate<br/>counts, coverage, weather"}}
+    PQ --> LOAD --> RAW --> GATE
+  end
+
+  subgraph J3["Job 3: transform"]
+    direction TB
+    DBT["dbt-fusion<br/>staging, intermediate, marts"]
+    PROD[("BigQuery<br/>coldchain_prod")]
+    DBT --> PROD
+  end
+
+  DASH["Evidence.dev dashboard"]
+
+  KES -.-> J1
+  KES -.-> J2
+  KES -.-> J3
+  J1 --> J2
+  J2 --> J3
+  PROD --> DASH
+
+  subgraph SUP["Supporting (planned)"]
+    direction TB
+    GCS[("GCS, versioned<br/>raw, weather, state")]
+    WD["Freshness watchdog<br/>+ budget alert"]
+    CI["GitHub Actions + Terraform<br/>image build, tests, plan/apply"]
+  end
+
+  subgraph V2["v2 streaming track (separate)"]
+    direction TB
+    KAF["Kafka"]
+    SPK["Spark Structured Streaming<br/>Delta tables"]
+    KAF -.-> SPK
+  end
+  SIM -.-> KAF
+  SPK -.->|"reconcile with marts"| PROD
+
+  classDef built fill:#e6f4ea,stroke:#2e7d32,color:#111;
+  classDef planned fill:#f5f5f5,stroke:#888,stroke-dasharray: 5 5,color:#111;
+  class WX,SIM,STATE,PQ,LOAD,RAW,DBT,PROD built;
+  class GATE,DASH,GCS,KES,WD,CI,KAF,SPK planned;
+```
+
 ## About the data
 
 The data is synthetic, but the simulator is not a closed refrigeration loop. Besides the physics
@@ -50,6 +110,15 @@ limits.
   recomputes whole days touched by new rows (day-aligned bounds), so window functions stay correct.
 - Window state that crosses a day boundary (for example the last decisive compliance status) is
   carried in a seed row read from the model's own previous output.
+- Two models run window functions over the full telemetry history and needed their own design.
+  `int_temperature_excursion_events_enriched` splits each compliance status into contiguous phases
+  (`phase_seq`) and carries the last phase, the excursion counter and the last known status across
+  days in a seed row. `int_door_recovery_events` needs no seed: its slice starts at the day of the
+  last door close before the new data, so a recovery that is still open is rebuilt from complete
+  data. Both were checked by starting an incremental run from chosen days and comparing it with a
+  full refresh: no row differs from the full refresh and there are no duplicate keys.
+- The remaining models read event ledgers, staging tables or each other at event scale, and are
+  rebuilt in full on every run.
 - `ingested_at` is the max over every input of a row, so late-arriving data re-triggers its own day.
 - `chain_test.sh`, `hourly_test.sh` and `mart_test.sh` compare per-day fingerprints of an
   incremental run against a snapshot of a full refresh.
@@ -79,7 +148,8 @@ limits.
 Work in progress. The simulator, the raw layer and the BigQuery loading are working. The dbt marts
 for the facility's core operations (room conditions, compressor and humidifier cycles, doors,
 downtime, temperature compliance, inventory and orders) are built, and the incremental chain is
-checked against full refreshes. Column-level tests (`schema.yml`) are still to be added.
+checked against full refreshes, including the two models that need state from earlier days.
+Column-level tests (`schema.yml`) are still to be added.
 
 Evaporator frost, electric defrost, low-pressure trips and the airflow interlock were added to the
 simulator later, motivated by a separate long-running contract project in DataAnnotation. They are
@@ -101,6 +171,6 @@ Items are listed in the order planned. Nothing below is marked done until it is 
 | 2 | **Docker**: one simulator image, used locally with Compose, in CI and later as a cloud job. | Planned |
 | 3 | **History generation**: simulate a long history for several locations as consecutive daily chunks (one UTC day each; daily mode and multi-location support are in the simulator) and load it into BigQuery. | Planned |
 | 4 | **Unattended daily run**: Kestra triggers separate jobs that simulate the next day, load it behind completeness gates and run dbt, with state kept in versioned storage. | Planned |
-| 5 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks of the marts against the simulator's event ledgers, and an Evidence.dev dashboard. | Planned |
+| 5 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks (singular dbt tests that recompute mart figures from the simulator's raw event ledgers and require them to match), and an Evidence.dev dashboard. | Planned |
 | 6 | **CI and infrastructure as code**: GitHub Actions for tests and `dbt build`; Terraform for the bucket, BigQuery tables and service accounts. | Planned |
-| 7 | **v2, streaming and Spark**: refactor the simulator into a digital twin that streams its output through Kafka into Spark, alongside the BigQuery marts. | Planned |
+| 7 | **v2, streaming and Spark** (separate track, started only after the batch pipeline above is complete): the simulator streams its output through Kafka into Spark Structured Streaming, and the streaming results are reconciled with the BigQuery marts for the same days. A second, reduced physics-only version of the simulator could run next to the full one as a reference model, with its deviations from the full run monitored; this is a simulation-based comparison, since there is no physical plant behind the data. | Planned, not started |

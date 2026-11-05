@@ -548,8 +548,7 @@ def calculate_airflow_variables(
     equipment_configurations_float64_vector,
     active_refrigerant_properties_vector,
     rho_air_room,
-    frost_thickness_m,
-    frost_rho,
+    passage_ice_thickness_m,
 ):
     V_dot_air_evap_actual = room_state_float64_vector[IDX_ROOM_STATE_V_DOT_AIR_EVAP_ACTUAL]
     V_dot_air_cond_actual = room_state_float64_vector[IDX_ROOM_STATE_V_DOT_AIR_COND_ACTUAL]
@@ -560,13 +559,14 @@ def calculate_airflow_variables(
         V_dot_air_evap_actual,
         equipment_configurations_float64_vector[IDX_EQ_VELOCITY_EXPONENT_UA_COIL_EVAP_AIR_SIDE],
     )
-    if frost_thickness_m > 0.0:
+    if passage_ice_thickness_m > 0.0:
         # The passage ice node is at the layer center. Air crosses half the
         # layer here; update_evaporator_energies() supplies the other half
         # between that node and the metal.
+        passage_ice_rho = room_state_float64_vector[IDX_ROOM_STATE_M_PASSAGE_ICE_KG] / room_state_float64_vector[IDX_ROOM_STATE_V_PASSAGE_ICE_M3]
         R_air_to_passage = 0.5 * frost_thermal_resistance_k_w(
-            frost_thickness_m,
-            frost_rho,
+            passage_ice_thickness_m,
+            passage_ice_rho,
             equipment_configurations_float64_vector[IDX_EQ_EVAP_SURFACE_AREA_M2],
         )
         UA_coil_evap_air = UA_coil_evap_air / (1.0 + UA_coil_evap_air * R_air_to_passage)
