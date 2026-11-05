@@ -78,3 +78,9 @@ dbt_project/notes
 # generated weather caches: only location 1 is committed (so the repo runs offline)
 simulation/weather/location_*/
 !simulation/weather/location_1/
+
+# README images: only the ones the README uses are committed (others stay local)
+docs/img/*
+!docs/img/header.jpg
+!docs/img/hero-power-dark.png
+!docs/img/hero-power-light.png
