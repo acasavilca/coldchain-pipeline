@@ -21,7 +21,7 @@ renamed as (
         cast(dewpoint_2m_c as float64) as ambient_dewpoint_temp_c,
         cast(shortwave_radiation_wm2 as float64) as shortwave_radiation_wm2,
         cast(wind_speed_10m_ms as float64) as wind_speed_ms,
-        cast(surface_pressure_hpa * 10.0 as float64) as ambient_pressure_pa,
+        cast(surface_pressure_hpa * 100.0 as float64) as ambient_pressure_pa,
         cast(soil_temperature_54cm_c as float64) as ground_temperature_c
 
     from source
