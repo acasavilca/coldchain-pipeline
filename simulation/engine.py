@@ -383,7 +383,7 @@ def run_simulator(
         # )
 
         (
-            frost_thickness_m,
+            passage_thickness_m,
             passage_open_fraction,
             combined_open_fraction,
             face_thickness_m,
@@ -405,11 +405,6 @@ def run_simulator(
             evaporator_fan_curve_matrix,
             dt_engine_sec,
         )
-        M_passage_ice = room_state_float64_vector[IDX_ROOM_STATE_M_PASSAGE_ICE_KG]
-        frost_rho = (
-            M_passage_ice / room_state_float64_vector[IDX_ROOM_STATE_V_PASSAGE_ICE_M3]
-            if M_passage_ice > 0.0 else 0.0
-        )
 
         # Was called with the wrong args entirely and only 6 of the 9 return
         # values unpacked.
@@ -423,8 +418,7 @@ def run_simulator(
             equipment_configurations_float64_vector,
             active_refrigerant_properties_vector,
             rho_air_room,
-            frost_thickness_m,
-            frost_rho,
+            passage_thickness_m,
         )
 
         update_refrigeration_state(
