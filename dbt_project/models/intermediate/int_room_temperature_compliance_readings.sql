@@ -111,18 +111,6 @@ equipment_design_params as (
     from {{ ref('dim_equipment_design') }}
 ),
 
--- temperature_telemetry_labeled as (
---     select
---         location_id,
---         ingested_at,
---         event_timestamp,
---         active_fruit_type_code,
---         downtime_phase_name,
---         t_room_c,
---         downtime_phase_name in ('shutdown', 'ramp_up') as is_downtime
---     from {{ ref('int_temperature_telemetry_labeled') }}
--- ),
-
 joined as (
     select
         t.*,

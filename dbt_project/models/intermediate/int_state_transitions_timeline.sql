@@ -78,6 +78,10 @@ temperature_excursion_enriched as (
         temperature_compliance_status,
         excursion_block_has_gaps
     from {{ ref('int_temperature_excursion_events_enriched') }}
+    qualify row_number() over (
+        partition by location_id, {{ quantize_timestamp_ms('phase_start_ts', min_interval_msec) }}
+        order by phase_start_ts desc, phase_seq desc
+    ) = 1
 ),
 
 downtime_enriched as (
