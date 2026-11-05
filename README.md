@@ -1,4 +1,6 @@
-# coldchain-pipeline
+<p align="center">
+  <img src="docs/img/header.jpg" alt="coldchain-pipeline: a physics-based cold-storage simulator feeding a BigQuery and dbt pipeline" width="100%">
+</p>
 
 A synthetic cold-storage data platform: a physics-based simulator generates raw SCADA-style
 data for a fruit-packing facility's cold rooms, and a dbt + BigQuery project turns it into
@@ -6,6 +8,13 @@ analytics-ready marts.
 
 This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
 [`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-power-dark.png">
+  <img src="docs/img/hero-power-light.png" alt="Three days of outside temperature, compressor efficiency and electricity use, and COP against outside temperature for May 2025" width="100%">
+</picture>
+
+*Hot afternoons cost efficiency: COP falls from about 4.0 to 2.8 and compressor power rises by about 2.5 kW. Every line comes from dbt models in BigQuery (`stg_weather`, `fct_compressor_performance`). The data is synthetic.*
 
 ```mermaid
 flowchart LR
@@ -110,6 +119,9 @@ limits.
   recomputes whole days touched by new rows (day-aligned bounds), so window functions stay correct.
 - Window state that crosses a day boundary (for example the last decisive compliance status) is
   carried in a seed row read from the model's own previous output.
+- **"Seed" has two meanings here.** dbt seeds are CSV files loaded with `dbt seed` (`dbt_project/seeds`).
+  A "seed row" in the incremental models is unrelated: it is the last row of the model's own previous
+  output, read back so that window functions continue across a day boundary.
 - Two models run window functions over the full telemetry history and needed their own design.
   `int_temperature_excursion_events_enriched` splits each compliance status into contiguous phases
   (`phase_seq`) and carries the last phase, the excursion counter and the last known status across
@@ -173,4 +185,4 @@ Items are listed in the order planned. Nothing below is marked done until it is 
 | 4 | **Unattended daily run**: Kestra triggers separate jobs that simulate the next day, load it behind completeness gates and run dbt, with state kept in versioned storage. | Planned |
 | 5 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks (singular dbt tests that recompute mart figures from the simulator's raw event ledgers and require them to match), and an Evidence.dev dashboard. | Planned |
 | 6 | **CI and infrastructure as code**: GitHub Actions for tests and `dbt build`; Terraform for the bucket, BigQuery tables and service accounts. | Planned |
-| 7 | **v2, streaming and Spark** (separate track, started only after the batch pipeline above is complete): the simulator streams its output through Kafka into Spark Structured Streaming, and the streaming results are reconciled with the BigQuery marts for the same days. A second, reduced physics-only version of the simulator could run next to the full one as a reference model, with its deviations from the full run monitored; this is a simulation-based comparison, since there is no physical plant behind the data. | Planned, not started |
+| 7 | **v2, streaming and Spark** (separate track, started only after the batch pipeline above is complete): the simulator streams its output through Kafka into Spark Structured Streaming, and the streaming results are reconciled with the BigQuery marts for the same days. A second, reduced physics-only version of the simulator could run next to the full one as a digital twin-style reference model: the full simulator, with its deliberately imperfect telemetry, plays the role of the real plant, and the reduced model's deviations from it are monitored. This is digital twin-style only, a simulation-based comparison, since there is no physical plant behind the data. | Planned, not started |
