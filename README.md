@@ -6,15 +6,39 @@ A synthetic cold-storage data platform: a physics-based simulator generates raw 
 data for a fruit-packing facility's cold rooms, and a dbt + BigQuery project turns it into
 analytics-ready marts.
 
-This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
-[`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
-
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-power-dark.png">
   <img src="docs/img/hero-power-light.png" alt="Three days of outside temperature, compressor efficiency and electricity use, and COP against outside temperature for May 2025" width="100%">
 </picture>
 
 *Hot afternoons cost efficiency: COP falls from about 4.0 to 2.8 and compressor power rises by about 2.5 kW. Every line comes from dbt models in BigQuery (`stg_weather`, `fct_compressor_performance`). The data is synthetic.*
+
+<!-- business section goes here -->
+
+## About the data
+
+The data is synthetic, but the simulator is not a closed refrigeration loop. Besides the physics
+(room heat balance, refrigerant cycle, evaporator frost and defrost, humidity and gas exchange), it
+models a facility that is operated by people and instrumented imperfectly:
+
+- **Stochastic operations**: truck arrivals and dispatches that vary by hour and weekday, doors left
+  open, scheduled downtime, and crop and refrigerant changeovers.
+- **Human behavior**: drivers and employees whose fatigue (time of day, weekday, end of month) and
+  carelessness change their probability of making an error.
+- **Imperfect instrumentation**: sensor noise, per-sensor sampling intervals, background dropout,
+  per-channel outages and facility-wide outages on the sensor tables.
+- **Real weather**: outdoor conditions are real historical data for the configured site
+  ([Open-Meteo](https://open-meteo.com/)), and the indoor climate responds to them through the
+  envelope and the doors.
+
+Because the simulator knows what actually happened, its event ledgers can serve as ground truth for
+checking the marts, which real plant data does not allow (planned, see the roadmap). The simulator
+has not been validated against a real installation; see `simulation/README.md` for assumptions and
+limits.
+
+## Architecture
+
+Green boxes are built and running; dashed grey boxes are planned (see the roadmap).
 
 ```mermaid
 flowchart LR
@@ -75,27 +99,6 @@ flowchart LR
   class WX,SIM,STATE,PQ,LOAD,RAW,DBT,PROD built;
   class GATE,DASH,GCS,KES,WD,CI,KAF,SPK planned;
 ```
-
-## About the data
-
-The data is synthetic, but the simulator is not a closed refrigeration loop. Besides the physics
-(room heat balance, refrigerant cycle, evaporator frost and defrost, humidity and gas exchange), it
-models a facility that is operated by people and instrumented imperfectly:
-
-- **Stochastic operations**: truck arrivals and dispatches that vary by hour and weekday, doors left
-  open, scheduled downtime, and crop and refrigerant changeovers.
-- **Human behavior**: drivers and employees whose fatigue (time of day, weekday, end of month) and
-  carelessness change their probability of making an error.
-- **Imperfect instrumentation**: sensor noise, per-sensor sampling intervals, background dropout,
-  per-channel outages and facility-wide outages on the sensor tables.
-- **Real weather**: outdoor conditions are real historical data for the configured site
-  ([Open-Meteo](https://open-meteo.com/)), and the indoor climate responds to them through the
-  envelope and the doors.
-
-Because the simulator knows what actually happened, its event ledgers can serve as ground truth for
-checking the marts, which real plant data does not allow (planned, see the roadmap). The simulator
-has not been validated against a real installation; see `simulation/README.md` for assumptions and
-limits.
 
 ## What is in the repo
 
@@ -172,6 +175,9 @@ airflow interlock), and the reason codes are decoded in the marts through seeds 
 simulator config. The dbt layer already ingests all of this (staging models, sensor tags, seeds).
 What remains is wiring it into the existing models, which reuses the established patterns more than
 it adds new modelling.
+
+This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
+[`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
 
 ## Roadmap
 
