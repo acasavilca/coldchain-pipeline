@@ -95,12 +95,8 @@
     "dtypes": {
       "location_id": "int64",
       "timestamp_ms": "int64",
-      "start_timestamp_ms": "int64",
-      "termination_reason": "int64",
-      "ice_melted_g": "int64",
-      "coil_ice_melted_g": "int64",
-      "pan_ice_melted_g": "int64",
-      "face_ice_shed_g": "int64"
+      "defrost_phase": "int64",
+      "termination_reason": "int64"
     },
     "datetime_cols": []
   },

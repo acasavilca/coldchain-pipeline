@@ -162,9 +162,10 @@ flowchart LR
 
 Work in progress. The simulator, the raw layer and the BigQuery loading are working. The dbt marts
 for the facility's core operations (room conditions, compressor and humidifier cycles, doors,
-downtime, temperature compliance, inventory and orders) are built, and the incremental chain is
-checked against full refreshes, including the two models that need state from earlier days.
-Column-level tests (`schema.yml`) are still to be added.
+downtime, temperature compliance, inventory and orders) are built, and so are the defrost,
+compressor-cycle and low-pressure trip facts. The incremental chain is checked against full
+refreshes, including the models that need state from earlier days. Column-level tests
+(`schema.yml`) and the dashboard are the current work.
 
 Evaporator frost, electric defrost, low-pressure trips and the airflow interlock were added to the
 simulator later, motivated by a separate long-running contract project in DataAnnotation. They are
@@ -172,9 +173,9 @@ exported as raw tables (`defrost_events`, and `lp_trip_events` for low-pressure 
 telemetry (`t_coil_evap_c`, `evap_air_velocity_m_s`). Every compressor state change in
 `compressor_events` carries a `switch_reason` (thermostat, defrost, downtime, low-pressure trip,
 airflow interlock), and the reason codes are decoded in the marts through seeds generated from the
-simulator config. The dbt layer already ingests all of this (staging models, sensor tags, seeds).
-What remains is wiring it into the existing models, which reuses the established patterns more than
-it adds new modelling.
+simulator config. The dbt layer ingests all of this and builds defrost-cycle, compressor-cycle and trip-episode facts
+from it. The low-pressure trip models have only been run on empty data so far, because the
+simulated history does not yet contain trips; a run that triggers them is still to do.
 
 This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
 [`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
@@ -185,11 +186,11 @@ Items are listed in the order planned. Done means merged and checked against a f
 
 | # | Item | Status |
 |---|---|---|
-| 1 | **Incremental processing for the window-function models**: the large intermediate models run as day-partitioned `insert_overwrite` models. The two that need history from earlier days carry state across the day boundary in a seed row (`int_temperature_excursion_events_enriched`, `int_door_recovery_events`). Each was checked by starting an incremental run from chosen days and comparing it with a full refresh (`chain_test.sh`, `hourly_test.sh`, `mart_test.sh`). | Done |
-| 2 | **Defrost and low-pressure trip analytics in dbt**: wire the new raw tables into the existing models. Classify every compressor stop by cause using `switch_reason`; defrost and trip windows in the state timeline; defrost recovery and cause attribution in the compliance models; post-defrost handling and airflow-ratio metrics in the compressor performance mart; per-defrost and per-trip fact tables. | In progress |
+| 1 | **Incremental processing for the window-function models**: the large intermediate models run as day-partitioned `insert_overwrite` models. The two that need history from earlier days carry state across the day boundary in a seed row (`int_temperature_excursion_events_enriched`, `int_door_recovery_events`). Each was checked by starting an incremental run from chosen days and comparing it with a full refresh (`dbt_project/test_helpers/`). | Done |
+| 2 | **Defrost and low-pressure trip analytics in dbt**: wire the new raw tables into the existing models. Classify every compressor stop by cause using `switch_reason`; defrost and trip windows in the state timeline; defrost recovery and cause attribution in the compliance models; per-defrost, per-trip and per-compressor-cycle fact tables; a shared `int_telemetry_derived` model that `fct_compressor_performance` filters. Checkpoint tables (`ck_*`) seed the forward-fill models so incremental runs match a full refresh. Verified on a full refresh of two locations over 30 days, and by incremental-versus-full comparisons from chosen cutoffs. The low-pressure trip path is only verified on empty data, because the simulated history contains no trips yet. | Done |
 | 3 | **Docker**: one simulator image, used locally with Compose, in CI and later as a cloud job. | Planned |
 | 4 | **History generation**: simulate a long history for several locations as consecutive daily chunks (one UTC day each; daily mode and multi-location support are in the simulator) and load it into BigQuery. | Planned |
 | 5 | **Unattended daily run**: Kestra triggers separate jobs that simulate the next day, load it behind completeness gates and run dbt, with state kept in versioned storage. | Planned |
-| 6 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks (singular dbt tests that recompute mart figures from the simulator's raw event ledgers and require them to match), and an Evidence.dev dashboard. | Planned |
+| 6 | **Tests and dashboard**: `schema.yml` with column tests, defrost/trip sanity tests, ground-truth checks (singular dbt tests that recompute mart figures from the simulator's raw event ledgers and require them to match), and an Evidence.dev dashboard. | In progress |
 | 7 | **CI and infrastructure as code**: GitHub Actions for tests and `dbt build`; Terraform for the bucket, BigQuery tables and service accounts. | Planned |
 | 8 | **v2, streaming and Spark** (separate track, started only after the batch pipeline above is complete): the simulator streams its output through Kafka into Spark Structured Streaming, and the streaming results are reconciled with the BigQuery marts for the same days. A second, reduced physics-only version of the simulator could run next to the full one as a digital twin-style reference model: the full simulator, with its deliberately imperfect telemetry, plays the role of the real plant, and the reduced model's deviations from it are monitored. This is digital twin-style only, a simulation-based comparison, since there is no physical plant behind the data. | Planned, not started |

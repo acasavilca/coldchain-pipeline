@@ -22,26 +22,13 @@ renamed as (
         cast(box_start_count as int64) as box_count_at_dispatch,
         cast(box_moved_count as int64) as box_count_moved,
         cast(pulp_temp_c as float64) as recorded_pulp_temp_at_dispatch_c,
-        cast(supervisor_intervention_ms as int64) as intervention_epoch_ms,
-        cast(quality_grade as int64) as quality_grade
+        cast(quality_grade as int64) as quality_grade,
+        timestamp_millis(cast(supervisor_intervention_ms as int64)) as intervention_timestamp
 
     from source
 )
 
-select
-    location_id,
-    batch_id,
-    parent_order_id,
-    event_timestamp,
-    timestamp_millis(intervention_epoch_ms) as intervention_timestamp,
-    -- sensor_gross_fruit_mass_at_dispatch_kg,
-    gross_fruit_mass_moved_kg,
-    box_count_at_dispatch,
-    box_count_moved,
-    recorded_gross_mass_at_dispatch_kg,
-    recorded_pulp_temp_at_dispatch_c,
-    quality_grade,
-    ingested_at
+select *
 from renamed
 qualify row_number() over (
     partition by location_id, batch_id, parent_order_id, event_timestamp

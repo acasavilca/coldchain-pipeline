@@ -10,26 +10,19 @@
 ) }}
 
 {% if is_incremental() and execute %}
+    {% set watermark = ingest_watermark(this, 'door_close_ts') %}
     {% set raw_lower_bound_sql %}
         select cast(timestamp(date(min(ts))) as string) as raw_min_ts
         from (
             select event_timestamp as ts
             from {{ ref('int_room_temperature_compliance_readings') }}
-            where ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-            {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-            {% endif %}
+            where ingested_at >= timestamp('{{ watermark }}')
 
             union all
 
             select event_timestamp as ts
             from {{ ref('int_door_events_enriched') }}
-            where ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-            {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-            {% endif %}
+            where ingested_at >= timestamp('{{ watermark }}')
         )
     {% endset %}
     {% set b = run_query(raw_lower_bound_sql) %}
@@ -127,6 +120,8 @@ door_close_disrupted as (
     where
         row_type = 'reading'
         and event_ts >= door_close_ts
+    qualify
+        row_number() over (partition by location_id, door_close_ts order by event_ts asc) = 1
         and temperature_compliance_status = 'out_of_spec'
 )
 

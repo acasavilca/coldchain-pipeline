@@ -164,16 +164,19 @@
     greatest(exp({{ log_p_discharge }} - {{ log_p_suction }}), 1.0)
 {%- endmacro %}
 
-{%- macro calculate_volumetric_efficiency(p_suction, p_discharge, C_clearance, inv_gamma, prefix='compressor') %}
-    {%- set pr_col = (prefix ~ '_') if prefix else '' -%}
-   
+{%- macro compressor_volumetric_metrics(p_suction, p_discharge, C_clearance, inv_gamma) -%}
     {#- Calculate pressure ratio (bounded to a minimum of 1.0 to handle anomalies safely) -#}
     {%- set pr_sql %}
         greatest(safe_divide({{ p_discharge }}, {{ p_suction }}), 1.0)
     {%- endset -%}
 
-    {{ pr_sql }} as {{ pr_col }}pressure_ratio,
-
-    {#- Calculate volumetric efficiency (bounded to a minimum of 0.1 per the reference code) -#}
-    greatest(1.0 - {{ C_clearance }} * (power({{ pr_sql }}, {{ inv_gamma }}) - 1.0), 0.1) as {{ pr_col }}eta_volumetric
-{%- endmacro %}
+    if(
+        {{ p_suction }} is null or {{ p_discharge }} is null or {{ p_suction }} <= 0,
+        null,
+        struct(
+            {{ pr_sql }} as pressure_ratio,
+            {#- Calculate volumetric efficiency (bounded to a minimum of 0.1 per the Python reference code) -#}
+            greatest(1.0 - {{ C_clearance }} * (power({{ pr_sql }}, {{ inv_gamma }}) - 1.0), 0.1) as eta_volumetric
+        )
+    )
+{%- endmacro -%}

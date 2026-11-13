@@ -9,6 +9,10 @@
     cluster_by=['location_id', 'fruit_type_code']
 ) }}
 
+{% if is_incremental() %}
+    {% set watermark = ingest_watermark(this, 'order_date_utc', hours=3, ts_type='date') %}
+{% endif %}
+
 with location_details as (
     select
         location_id,
@@ -30,11 +34,7 @@ new_rows as (
     from {{ ref('int_order_fulfillment') }}
     {% if is_incremental() %}
         where
-            ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-            (select timestamp_sub(max(t.ingested_at), interval 3 hour) from {{ this }} as t)
-        {% endif %}
+            ingested_at >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 

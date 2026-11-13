@@ -30,7 +30,7 @@ sources:
       - name: lp_trip_events
         description: "Low-pressure switch trip/reset events from the refrigeration controller."
       - name: defrost_events
-        description: "One row per electric defrost cycle: start/end, termination reason, and ice melted/shed (grams)."
+        description: "Electric defrost controller state changes: one row each time the controller enters a phase, with the termination reason on the heat-to-drip row."
 
       # order_id and batch_id are per-room counters, so they repeat across locations: the key is (location_id, id)
       - name: inbound_orders

@@ -10,14 +10,13 @@
 ) }}
 
 {% if is_incremental() and execute %}
+    {% set watermark = ingest_watermark(this, 'event_timestamp', hours=6) %}
+    {% set checkpoint_table = ensure_checkpoint_table(this) %}
+
     {% set lower_bound_sql %}
         select cast(timestamp(date(min(event_timestamp))) as string) as min_ts
         from {{ ref('int_temperature_telemetry_labeled') }}
-        where ingested_at >= {% if var('cutoff_override', none) %}
-            timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-            (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+        where ingested_at >= timestamp('{{ watermark }}')
     {% endset %}
     {% set b = run_query(lower_bound_sql) %}
     {% set min_ts = b.columns[0].values()[0] %}
@@ -36,7 +35,16 @@ with source_slice as (
         event_timestamp,
         active_fruit_type_code,
         t_room_c,
-        downtime_phase_name
+        downtime_phase_name,
+        defrost_cycle_id,
+        defrost_phase_code,
+        defrost_termination_reason_code,
+        defrost_cycle_has_missing_rows,
+        open_door_count,
+        last_door_close_ts,
+        low_p_trip_count,
+        is_low_p_switch_tripped,
+        low_p_trip_episode_anomalous
     from {{ ref('int_temperature_telemetry_labeled') }}
     {% if is_incremental() %}
         where event_timestamp >= timestamp('{{ min_ts }}')
@@ -52,12 +60,19 @@ seed_rows as (
             active_fruit_type_code,
             t_room_c,
             downtime_phase_name,
+            defrost_cycle_id,
+            defrost_phase_code,
+            defrost_termination_reason_code,
+            defrost_cycle_has_missing_rows,
+            open_door_count,
+            last_door_close_ts,
+            low_p_trip_count,
+            is_low_p_switch_tripped,
+            low_p_trip_episode_anomalous,
             carried_decisive_status as seed_decisive_status
-        from {{ this }}
-        where
-            event_timestamp >= timestamp_sub(timestamp('{{ min_ts }}'), interval 1 day)
-            and event_timestamp < timestamp('{{ min_ts }}')
-        qualify row_number() over (partition by location_id order by event_timestamp desc) = 1
+        from {{ checkpoint_table }}
+        where checkpoint_day < date('{{ min_ts }}')
+        qualify row_number() over (partition by location_id order by checkpoint_day desc) = 1
     {% else %}
         select
             location_id,
@@ -66,8 +81,18 @@ seed_rows as (
             active_fruit_type_code,
             t_room_c,
             downtime_phase_name,
+            defrost_cycle_id,
+            defrost_phase_code,
+            defrost_termination_reason_code,
+            defrost_cycle_has_missing_rows,
+            open_door_count,
+            last_door_close_ts,
+            low_p_trip_count,
+            is_low_p_switch_tripped,
+            low_p_trip_episode_anomalous,
             cast(null as string) as seed_decisive_status
-        from source_slice where false
+        from source_slice
+        where false
     {% endif %}
 ),
 
@@ -79,6 +104,15 @@ telemetry_unioned as (
         active_fruit_type_code,
         t_room_c,
         downtime_phase_name,
+        defrost_cycle_id,
+        defrost_phase_code,
+        defrost_termination_reason_code,
+        defrost_cycle_has_missing_rows,
+        open_door_count,
+        last_door_close_ts,
+        low_p_trip_count,
+        is_low_p_switch_tripped,
+        low_p_trip_episode_anomalous,
         seed_decisive_status
     from seed_rows
 
@@ -91,6 +125,15 @@ telemetry_unioned as (
         active_fruit_type_code,
         t_room_c,
         downtime_phase_name,
+        defrost_cycle_id,
+        defrost_phase_code,
+        defrost_termination_reason_code,
+        defrost_cycle_has_missing_rows,
+        open_door_count,
+        last_door_close_ts,
+        low_p_trip_count,
+        is_low_p_switch_tripped,
+        low_p_trip_episode_anomalous,
         null as seed_decisive_status
     from source_slice
 ),
@@ -145,6 +188,15 @@ select
     t_room_c,
     active_fruit_type_code,
     downtime_phase_name,
+    defrost_cycle_id,
+    defrost_phase_code,
+    defrost_termination_reason_code,
+    defrost_cycle_has_missing_rows,
+    open_door_count,
+    last_door_close_ts,
+    low_p_trip_count,
+    is_low_p_switch_tripped,
+    low_p_trip_episode_anomalous,
     sp as refrigeration_target_t_setpoint_c,
     case
         when is_downtime then 'downtime'

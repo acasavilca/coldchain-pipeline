@@ -67,6 +67,7 @@ data_out/
 scratchpad/
 *TEST*
 errors.txt
+old_*
 
 # =========================
 # OS

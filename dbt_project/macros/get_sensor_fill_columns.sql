@@ -71,3 +71,20 @@
         {{ return(100) }}
     {% endif %}
 {%- endmacro %}
+
+{%- macro get_max_polling_interval_ms(tags_list=none) %}
+    {% set query -%}
+        select max(expected_polling_interval_sec) * 1000 as max_interval_ms
+        from {{ ref('seed_sensor_polling_config') }}
+        {%- if tags_list %}
+        where tag_name in ('{{ tags_list | join("', '") }}')
+        {%- endif %}
+    {%- endset %}
+
+    {% if execute %}
+        {% set result = run_query(query) %}
+        {{ return(result.columns[0].values()[0] | int) }}
+    {% else %}
+        {{ return(100) }}
+    {% endif %}
+{%- endmacro %}

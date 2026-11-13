@@ -9,6 +9,10 @@
     cluster_by=['location_id', 'batch_id']
 ) }}
 
+{% if is_incremental() %}
+    {% set watermark = ingest_watermark(this, 'quantized_event_ts', hours=6) %}
+{% endif %}
+
 {% set sensor_tags = var('telemetry_sensor_tags') %}
 
 {% set telem_min_interval_msec = get_min_polling_interval_ms(sensor_tags) %}
@@ -37,11 +41,7 @@ with new_rows_batches as (
     from {{ ref('int_batch_sensors_sparse_pivot') }}
     {% if is_incremental() %}
         where
-            ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+            ingested_at >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 
@@ -50,11 +50,7 @@ new_rows_facility as (
     from {{ ref('int_facility_events_forward_filled') }}
     {% if is_incremental() %}
         where
-            ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+            ingested_at >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 

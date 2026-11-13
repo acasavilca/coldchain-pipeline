@@ -1,0 +1,7 @@
+defrost_phase_code,defrost_phase_name,defrost_phase_description
+0,normal,Normal refrigeration; defrost finished or not started
+1,wait_for_stop,Defrost due; waiting for the compressor to stop
+2,settle,Compressor off; settling before heaters energize
+3,heat,Defrost heaters on until the coil probe or timeout ends the heat
+4,drip,Heaters off; meltwater drains
+5,fan_delay,Compressor may restart; evaporator fan held off until the coil is cold

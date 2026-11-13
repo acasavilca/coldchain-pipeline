@@ -46,6 +46,7 @@ vars:
     - compressor_cycle_id
     - is_compressor_active
     - compressor_status
+    - compressor_switch_reason_code
     - compressor_cycle_anomalous
     - humidifier_cycle_id
     - is_humidifier_active
@@ -66,8 +67,21 @@ vars:
     - excursion_id
     - temperature_compliance_status
     - excursion_block_has_gaps
+    - temperature_excursion_primary_cause
     - downtime_seq_id
     - downtime_phase
+    - defrost_cycle_id
+    - defrost_phase_code
+    - defrost_phase_start_ts
+    - defrost_cycle_has_missing_rows
+    - defrost_termination_reason_code
+    - last_defrost_end_ts
+    - low_p_trip_episode_id
+    - is_low_p_switch_tripped
+    - low_p_trip_episode_anomalous
+    - last_lp_trip_switch_off_ts
+  sensor_gap_fill_multiplier: 2.0
+  compressor_stabilization_sec: 120
 
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models

@@ -120,7 +120,7 @@ Each chunk writes:
 | `telemetry` | Long format (tag, value) from fixed room and plant instruments, 14 tags: room, return and supply air temperature, relative humidity, CO2, O2, suction and liquid line temperature and pressure, compressor power, evaporator coil temperature, evaporator air velocity. |
 | `batch_sensors` | Pallet-mounted pulp temperature (`t_pulp_c`) and load cell (`mass_kg`), polled every 10 minutes. |
 | `compressor_events`, `humidifier_events`, `door_events` | Controller and door event ledgers. Compressor events carry `switch_reason` (thermostat, defrost, downtime, low-pressure trip, airflow interlock); codes are decoded by the generated seed `seed_compressor_switch_reason_reference`. |
-| `lp_trip_events`, `defrost_events` | Low-pressure switch state changes and one row per defrost cycle. |
+| `lp_trip_events`, `defrost_events` | Low-pressure switch state changes, and defrost controller phase changes (one row each time a defrost phase is entered, with the termination reason on the heat-to-drip row). Phase codes are decoded by the generated seed `seed_defrost_phase_reference`. |
 | `crop_rotation_events`, `refrigerant_rotation_events`, `downtime_sequence_events` | Planned changeovers and downtime windows. |
 | `inbound_orders`, `outbound_orders`, `inbound_pallet_history`, `outbound_pallet_history` | Warehouse records. |
 

@@ -10,6 +10,7 @@ detected_states as (
         location_id,
         event_timestamp,
         is_active,
+        switch_reason_code,
         ingested_at,
         -- Detect state change (Returns true for first row or when status flips)
         coalesce(
@@ -24,21 +25,22 @@ cycle_blocks as (
         location_id,
         event_timestamp,
         is_active,
+        switch_reason_code,
         state_changed_flag,
         ingested_at,
         -- Label cycles (1 cycle = 1 on + 1 off period)
-        sum(case when state_changed_flag = true and is_active = true then 1 else 0 end) over (
-            partition by location_id
-            order by event_timestamp
-        ) as cycle_id,
+        sum(case when is_active or not state_changed_flag then 1 else 0 end) over w as cycle_id,
         -- Calculate duration of each row
-        lead(event_timestamp) over (partition by location_id order by event_timestamp) as next_event_timestamp,
+        lead(event_timestamp) over w as next_event_timestamp,
+        lead(not state_changed_flag) over w as next_row_is_duplicate,
         timestamp_diff(
-            lead(event_timestamp) over (partition by location_id order by event_timestamp),
+            lead(event_timestamp) over w,
             event_timestamp,
             millisecond
         ) as row_duration_msec
     from detected_states
+    window
+        w as (partition by location_id order by event_timestamp)
 )
 
 select
@@ -49,9 +51,16 @@ select
     event_timestamp,
     next_event_timestamp,
     is_active,
+    switch_reason_code,
     row_duration_msec,
     -- Mark every row in the cycle if the cycle has an anomaly
-    logical_or(state_changed_flag = false) over (
-        partition by location_id, cycle_id
-    ) as cycle_has_anomaly
+    logical_or(not state_changed_flag or coalesce(next_row_is_duplicate, false)) over w as cycle_has_anomaly,
+    (
+        cycle_id > 0
+        and count(*) over w < 2
+        and (next_event_timestamp is not null or not is_active)
+    ) as orphan_cycle,
+    min(event_timestamp) over w as compressor_cycle_start_ts
 from cycle_blocks
+window
+    w as (partition by location_id, cycle_id)

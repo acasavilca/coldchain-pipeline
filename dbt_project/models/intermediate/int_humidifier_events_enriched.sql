@@ -46,15 +46,23 @@ cycle_blocks as (
         is_humidifying,
         state_changed_flag,
         ingested_at,
-        sum(case when state_changed_flag = true and is_humidifying = true then 1 else 0 end) over (
-            partition by location_id order by event_timestamp
-        ) as cycle_id,
-        lead(event_timestamp) over (partition by location_id order by event_timestamp) as next_event_timestamp,
+        sum(
+            case
+                when is_humidifying and state_changed_flag then 1 -- off -> on: new cycle
+                when not is_humidifying and not state_changed_flag then 1 -- off -> off: duplicate off, new id
+                else 0
+            end
+        ) over w as cycle_id,
+        lead(event_timestamp) over w as next_event_timestamp,
+        (not is_humidifying and not state_changed_flag) as is_duplicate_off,
+        lead(not is_humidifying and not state_changed_flag) over w as next_row_is_duplicate,
         timestamp_diff(
-            lead(event_timestamp) over (partition by location_id order by event_timestamp),
+            lead(event_timestamp) over w,
             event_timestamp, millisecond
         ) as row_duration_msec
     from detected_states
+    window
+        w as (partition by location_id order by event_timestamp)
 )
 
 select
@@ -69,5 +77,15 @@ select
     max_humid_capacity_utilized_pct,
     is_humidifying,
     row_duration_msec,
-    logical_or(state_changed_flag = false) over (partition by location_id, cycle_id) as cycle_has_anomaly
+    logical_or(is_duplicate_off or coalesce(next_row_is_duplicate, false)) over w as cycle_has_anomaly,
+    (
+        cycle_id > 0
+        and (logical_and(is_humidifying) over w = logical_or(is_humidifying) over w)
+        and (
+            logical_and(next_event_timestamp is not null) over w
+            or not logical_or(is_humidifying) over w
+        )
+    ) as orphan_cycle
 from cycle_blocks
+window
+    w as (partition by location_id, cycle_id)

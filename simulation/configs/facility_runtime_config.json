@@ -653,8 +653,19 @@
     {"code": -2, "name": "airflow_interlock", "description": "Evaporator airflow interlock opened"}
   ],
 
+  "defrost_phases": [
+    {"code": 0, "name": "normal", "description": "Normal refrigeration; defrost finished or not started"},
+    {"code": 1, "name": "wait_for_stop", "description": "Defrost due; waiting for the compressor to stop"},
+    {"code": 2, "name": "settle", "description": "Compressor off; settling before heaters energize"},
+    {"code": 3, "name": "heat", "description": "Defrost heaters on until the coil probe or timeout ends the heat"},
+    {"code": 4, "name": "drip", "description": "Heaters off; meltwater drains"},
+    {"code": 5, "name": "fan_delay", "description": "Compressor may restart; evaporator fan held off until the coil is cold"}
+  ],
+
   "defrost_termination_reasons": [
     {"code": 1, "name": "probe", "description": "Coil probe reached termination temperature"},
-    {"code": 2, "name": "timeout", "description": "Maximum heat time reached"}
+    {"code": 2, "name": "timeout", "description": "Maximum heat time reached"},
+    {"code": -1, "name": "ongoing", "description": "Heat phase is the last observed row; termination not yet recorded"},
+    {"code": -2, "name": "missing", "description": "Heat phase has a data gap; termination reason not recorded"}
   ]
 }

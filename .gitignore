@@ -66,6 +66,7 @@ node_modules/
 Thumbs.db
 
 # local backups and scratch
+backups/
 *.bak
 *.bak.*
 *.tgz
@@ -74,6 +75,7 @@ Thumbs.db
 
 # personal / local-only
 dbt_project/notes
+dbt_project/test_helpers/legacy_prod/
 
 # generated weather caches: only location 1 is committed (so the repo runs offline)
 simulation/weather/location_*/
@@ -85,3 +87,6 @@ docs/img/*
 !docs/img/hero-power-dark.png
 !docs/img/hero-power-light.png
 simulation/runs_old_keep/
+
+# old test scripts superseded by test_helpers/
+dbt_project/test_helpers/legacy_prod/
