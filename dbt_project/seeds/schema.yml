@@ -18,6 +18,8 @@ seeds:
         refrigerant_name: string
         rated_superheat_k: float64
         rated_subcooling_k: float64
+        lp_trip_cut_out_bar: float64
+        lp_trip_cut_in_bar: float64
 
   - name: seed_refrigerant_physical_constants
     description: "Refrigerant scalar constants."
@@ -80,6 +82,19 @@ seeds:
         temperature_hysteresis_exit_margin_c: float64
         humidifier_max_total_discs_ceiling: int64
         humidifier_discs_per_cluster_count: int64
+        compressor_evaluation_interval_sec: float64
+        compressor_minimum_active_time_sec: float64
+        compressor_minimum_idle_time_sec: float64
+        defrost_interval_sec: float64
+        defrost_settle_sec: float64
+        defrost_max_heat_sec: float64
+        defrost_drip_sec: float64
+        defrost_fan_delay_max_sec: float64
+        evap_rated_airflow_m3_s: float64
+        evap_rated_face_velocity_m_s: float64
+        evap_airflow_proof_trip_velocity_m_s: float64
+        evap_airflow_proof_recovery_multiplier: float64
+        evap_airflow_proof_condition_delay_sec: float64
 
   - name: seed_location_details
     description: "Geographic metadata, country mappings, and local timezones for facility locations."
@@ -128,6 +143,14 @@ seeds:
         compressor_switch_reason_code: int64
         compressor_switch_reason_name: string
         compressor_switch_reason_description: string
+
+  - name: seed_defrost_phase_reference
+    description: "Decodes defrost_events.defrost_phase (the phase the controller entered)"
+    config:
+      column_types:
+        defrost_phase_code: int64
+        defrost_phase_name: string
+        defrost_phase_description: string
 
   - name: seed_defrost_termination_reason_reference
     description: "Decodes defrost_events.termination_reason"

@@ -9,16 +9,16 @@
     cluster_by=["location_id"]
 ) }}
 
+{% if is_incremental() %}
+    {% set watermark = ingest_watermark(this, 'quantized_event_ts', hours=6) %}
+{% endif %}
+
 with new_rows_telemetry as (
     select quantized_event_ts
     from {{ ref('int_telemetry_sparse_pivot') }}
     {% if is_incremental() %}
         where
-            ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+            ingested_at >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 
@@ -27,11 +27,7 @@ new_rows_states as (
     from {{ ref('int_state_transitions_timeline') }}
     {% if is_incremental() %}
         where
-            ingested_at >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+            ingested_at >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 

@@ -9,17 +9,19 @@
     cluster_by=["location_id", "tag_name"]
 ) }}
 
+{% set sensor_tags = var('telemetry_sensor_tags') %}
+{% set fill_multiplier = var('sensor_gap_fill_multiplier') %}
+
+{% set fill_lookback_ms = (get_max_polling_interval_ms(sensor_tags) * fill_multiplier) | int %}
+
 {% if is_incremental() and execute %}
+    {% set watermark = ingest_watermark(this, 'event_timestamp', hours=6) %}
     {% set bounds_sql %}
         select
           cast(timestamp(date(min(cast(event_timestamp as timestamp)))) as string) as min_ts,
           cast(timestamp(date_add(date(max(cast(event_timestamp as timestamp)) + interval 1 minute), interval 1 day)) as string) as max_ts
         from {{ source('coldchain_raw', 'telemetry') }}
-        where cast(loaded_at as timestamp) >= {% if var('cutoff_override', none) %}
-        timestamp('{{ var("cutoff_override") }}')
-      {% else %}
-          (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-      {% endif %}
+        where cast(loaded_at as timestamp) >= timestamp('{{ watermark }}')
     {% endset %}
     {% set b = run_query(bounds_sql) %}
     {% set min_ts = b.columns[0].values()[0] %}
@@ -28,6 +30,7 @@
         {% set min_ts = '2100-01-01 00:00:00+00:00' %}
         {% set max_ts = '2100-01-02 00:00:00+00:00' %}
     {% endif %}
+
 {% endif %}
 
 with sensor_polling_config as (
@@ -42,7 +45,7 @@ source_slice as (
     from {{ ref('stg_telemetry') }}
     {% if is_incremental() %}
         where
-            event_timestamp >= timestamp_sub(timestamp('{{ min_ts }}'), interval 1 minute)
+            event_timestamp >= timestamp_sub(timestamp('{{ min_ts }}'), interval {{ fill_lookback_ms }} millisecond)
             and event_timestamp < timestamp('{{ max_ts }}')
     {% endif %}
 ),
@@ -78,11 +81,11 @@ select
     * except (last_real_reading_ts, imputed_reading, gap_since_last_reading_sec),
     case
         when sensor_reading is not null then sensor_reading
-        when gap_since_last_reading_sec <= expected_polling_interval_sec * 2.0 then imputed_reading
+        when gap_since_last_reading_sec <= expected_polling_interval_sec * {{ fill_multiplier }} then imputed_reading
     end as value_filled,
     case
         when sensor_reading is not null then 'real'
-        when gap_since_last_reading_sec <= expected_polling_interval_sec * 2.0 then 'forward_filled'
+        when gap_since_last_reading_sec <= expected_polling_interval_sec * {{ fill_multiplier }} then 'forward_filled'
         else 'unknown'
     end as fill_status
 from gap_flagged_enriched

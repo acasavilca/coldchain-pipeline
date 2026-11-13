@@ -9,6 +9,10 @@
     cluster_by=['location_id', 'fruit_type_code']
 ) }}
 
+{% if is_incremental() %}
+    {% set watermark = ingest_watermark(this, 'order_ts', hours=6) %}
+{% endif %}
+
 with pallet_history_aggregate as (
     select
         location_id,
@@ -31,11 +35,7 @@ new_rows as (
             and ord.order_id = agg.outbound_order_id
     {% if is_incremental() %}
         where
-            greatest(ord.ingested_at, coalesce(agg.ingested_at, ord.ingested_at)) >= {% if var('cutoff_override', none) %}
-                timestamp('{{ var("cutoff_override") }}')
-        {% else %}
-                (select timestamp_sub(max(t.ingested_at), interval 6 hour) from {{ this }} as t)
-        {% endif %}
+            greatest(ord.ingested_at, coalesce(agg.ingested_at, ord.ingested_at)) >= timestamp('{{ watermark }}')
     {% endif %}
 ),
 

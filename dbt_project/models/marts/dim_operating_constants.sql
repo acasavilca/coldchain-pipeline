@@ -66,6 +66,8 @@ join_operating_constants as (
         comp_phys.compressor_displacement_m3_rev,
         comp_phys.compressor_speed_hz,
         comp_rating.rated_superheat_k,
+        comp_rating.lp_trip_cut_out_bar,
+        comp_rating.lp_trip_cut_in_bar,
         refrig_phys_const.gamma_refrigerant,
         mass_flow_curve.coeffs_array as m_dot_coeffs,
         mass_flow_curve.bounds_array as m_dot_bounds,
@@ -104,6 +106,8 @@ raw_operating_constants as (
         compressor_displacement_m3_rev,
         compressor_speed_hz,
         rated_superheat_k,
+        lp_trip_cut_out_bar,
+        lp_trip_cut_in_bar,
         {{ evaluate_poly(dims=2, x_cols=['t_evap_rated_c', 't_cond_rated_c'], coeffs_col='m_dot_coeffs', bounds_col='m_dot_bounds') }} as m_dot_refrig_kg_s_rated,
         {{ evaluate_poly(dims=2, x_cols=['t_evap_rated_c', 'rated_superheat_k'], coeffs_col='rho_suction_coeffs', bounds_col='rho_suction_bounds') }} as rho_suction_rated,
         {{ calculate_pressure_ratio('t_evap_rated_c', 't_cond_rated_c', 'antoine_evap_coeffs', 'antoine_cond_coeffs') }} as pressure_ratio_rated
@@ -126,6 +130,8 @@ operating_constants as (
         gamma_refrigerant,
         compressor_displacement_m3_rev,
         compressor_speed_hz,
+        lp_trip_cut_out_bar,
+        lp_trip_cut_in_bar,
         (m_dot_refrig_kg_s_rated / (compressor_displacement_m3_rev * compressor_speed_hz * rho_suction_rated)) as eta_vol_rated
     from raw_operating_constants
 )
@@ -148,6 +154,8 @@ select
     (1.0 / gamma_refrigerant) as inv_gamma,
     compressor_displacement_m3_rev,
     compressor_speed_hz,
+    lp_trip_cut_out_bar,
+    lp_trip_cut_in_bar,
     ((1.0 - eta_vol_rated) / (pow(pressure_ratio_rated, 1.0 / gamma_refrigerant) - 1.0)) as c_clearance,
     current_timestamp() as dbt_updated_at
 from operating_constants

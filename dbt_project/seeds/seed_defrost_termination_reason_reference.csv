@@ -1,3 +1,5 @@
 defrost_termination_reason_code,defrost_termination_reason_name,defrost_termination_reason_description
 1,probe,Coil probe reached termination temperature
 2,timeout,Maximum heat time reached
+-1,ongoing,Heat phase is the last observed row; termination not yet recorded
+-2,missing,Heat phase has a data gap; termination reason not recorded

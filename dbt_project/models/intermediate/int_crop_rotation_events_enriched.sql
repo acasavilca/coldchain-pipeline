@@ -11,7 +11,7 @@ enriched as (
         ingested_at,
         event_timestamp,
         lead(event_timestamp) over (partition by location_id order by event_timestamp) as next_event_timestamp,
-        fruit_type_code = lag(fruit_type_code) over (partition by location_id order by event_timestamp) as rotation_is_anomalous
+        (fruit_type_code = lag(fruit_type_code) over (partition by location_id order by event_timestamp)) as rotation_is_anomalous
     from crop_rotation_events
 )
 
