@@ -90,12 +90,9 @@ from matrix_index_maps import (
     IDX_COMPRESSOR_EVENT_IS_ACTIVE,
     IDX_LP_TRIP_EVENT_TIMESTAMP_MS,
     IDX_LP_TRIP_EVENT_TRIPPED,
-    IDX_DEFROST_EVENT_START_MS,
-    IDX_DEFROST_EVENT_END_MS,
+    IDX_DEFROST_EVENT_TIMESTAMP_MS,
+    IDX_DEFROST_EVENT_PHASE,
     IDX_DEFROST_EVENT_TERMINATION_REASON,
-    IDX_DEFROST_EVENT_COIL_ICE_MELTED_G,
-    IDX_DEFROST_EVENT_PAN_ICE_MELTED_G,
-    IDX_DEFROST_EVENT_FACE_ICE_SHED_G,
     IDX_DOOR_EVENT_TIMESTAMP_MS,
     IDX_DOOR_EVENT_DOOR_CODE,
     IDX_DOOR_EVENT_IS_OPEN,
@@ -576,20 +573,15 @@ def plot_defrost_diagnostics(out, plots_dir):
     defrost_events = out.get("defrost_event_ledger")
     if defrost_events is not None:
         for event in defrost_events:
+            # One row per phase change; the heat -> drip row carries the termination reason.
             reason = event[IDX_DEFROST_EVENT_TERMINATION_REASON]
-            reason_name = (
-                "probe" if reason == DF_TERMINATION_PROBE else
-                "timeout" if reason == DF_TERMINATION_TIMEOUT else "unknown"
-            )
-            color = {"probe": "tab:green", "timeout": "tab:orange", "unknown": "tab:gray"}[reason_name]
-            event_hour = (event[IDX_DEFROST_EVENT_END_MS] - t0) / 3_600_000.0
+            if reason == 0:
+                continue
+            reason_name = "probe" if reason == DF_TERMINATION_PROBE else "timeout"
+            color = {"probe": "tab:green", "timeout": "tab:orange"}[reason_name]
+            event_hour = (event[IDX_DEFROST_EVENT_TIMESTAMP_MS] - t0) / 3_600_000.0
             axes[0].axvline(event_hour, color=color, alpha=0.5, linewidth=1.0)
-            print(
-                f"[defrost] {event[IDX_DEFROST_EVENT_START_MS]} -> {event[IDX_DEFROST_EVENT_END_MS]} "
-                f"reason={reason_name} coil_melted={event[IDX_DEFROST_EVENT_COIL_ICE_MELTED_G]} g "
-                f"pan_melted={event[IDX_DEFROST_EVENT_PAN_ICE_MELTED_G]} g "
-                f"face_shed={event[IDX_DEFROST_EVENT_FACE_ICE_SHED_G]} g"
-            )
+            print(f"[defrost] heat ended at {event[IDX_DEFROST_EVENT_TIMESTAMP_MS]} reason={reason_name}")
     axes[0].set_yticks(range(6), phase_names)
     axes[0].set_ylabel("Defrost phase")
     axes[0].set_title("Defrost schedule and heater operation (green: probe, orange: timeout)")

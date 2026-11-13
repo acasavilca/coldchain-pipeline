@@ -1026,8 +1026,9 @@ def size_ledgers(sim_start_ms, sim_end_ms, safety_factor=1.75, facility_cfg: Uni
     defrost_interval_ms = int(hw["electric_defrost_control"]["interval_sec"] * 1e3)
     if defrost_interval_ms <= 0:
         raise ValueError("electric_defrost_control.interval_sec must be positive")
-    # One row per completed cycle, plus room for a cycle resumed from an earlier chunk.
-    defrost_event_rows = ceil_int((sim_end_ms - sim_start_ms) / defrost_interval_ms) + 2
+    # One row per phase change (WAIT_FOR_STOP, SETTLE, HEAT, DRIP, FAN_DELAY, back to NORMAL),
+    # plus room for a cycle resumed from an earlier chunk.
+    defrost_event_rows = (ceil_int((sim_end_ms - sim_start_ms) / defrost_interval_ms) + 2) * 6
 
     # Humidifier events: bounded by PID evaluation interval (can't toggle faster than it evaluates)
     humidifier_pid_interval_sec = aux["relative_humidity_pid_evaluation_interval_sec"]

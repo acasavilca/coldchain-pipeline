@@ -173,6 +173,8 @@ def generate_compressor_curve_seed(compressor_cfg: dict, out_dir: Path, ref_map:
             "refrigerant_name": refrigerant_name,
             "rated_superheat_k": ratings["superheat_k"],
             "rated_subcooling_k": ratings["subcooling_k"],
+            "lp_trip_cut_out_bar": refrigerant_data["low_pressure_trip_settings"]["cut_out_bar"],
+            "lp_trip_cut_in_bar": refrigerant_data["low_pressure_trip_settings"]["cut_in_bar"],
         })
         fit = refrigerant_data["fitted_compressor_polynomials"]["mass_flow_kg_s"]
         mass_flow_rows.append({
@@ -192,7 +194,7 @@ def generate_compressor_curve_seed(compressor_cfg: dict, out_dir: Path, ref_map:
     )
     write_csv(
         out_dir / "seed_compressor_rating_conditions.csv",
-        ["compressor_model_code", "refrigerant_code", "refrigerant_name", "rated_superheat_k", "rated_subcooling_k"],
+        ["compressor_model_code", "refrigerant_code", "refrigerant_name", "rated_superheat_k", "rated_subcooling_k", "lp_trip_cut_out_bar", "lp_trip_cut_in_bar"],
         rating_condition_rows,
     )
     write_csv(
@@ -213,7 +215,7 @@ def generate_compressor_curve_seed(compressor_cfg: dict, out_dir: Path, ref_map:
     )
 
 
-def generate_location_parameters_seeds(facility_cfg: dict, out_dir: Path):
+def generate_location_parameters_seeds(facility_cfg: dict, evaporator_cfg: dict, out_dir: Path):
     """
     Crop-independent, refrigerant-independent design/rated constants -- the
     other half of what's needed for t_evap_rated/t_cond_rated in the
@@ -221,6 +223,7 @@ def generate_location_parameters_seeds(facility_cfg: dict, out_dir: Path):
     config, not one per location/crop/refrigerant.
     """
     hw = facility_cfg["refrigeration_and_humidifier_hardware"]
+    airflow_proof = hw["evaporator_airflow_proof"]
     equipment_design_rows = []
     location_details_rows = []
     for location_data in facility_cfg["facility_location"]["locations"].values():
@@ -235,6 +238,19 @@ def generate_location_parameters_seeds(facility_cfg: dict, out_dir: Path):
             "temperature_hysteresis_exit_margin_c": hw["temperature_hysteresis_exit_margin_c"],
             "humidifier_max_total_discs_ceiling": hw["humidifier_max_total_discs_ceiling"],
             "humidifier_discs_per_cluster_count": hw["humidifier_discs_per_cluster_count"],
+            "compressor_evaluation_interval_sec": hw["compressor_evaluation_interval_sec"],
+            "compressor_minimum_active_time_sec": hw["compressor_minimum_active_time_sec"],
+            "compressor_minimum_idle_time_sec": hw["compressor_minimum_idle_time_sec"],
+            "defrost_interval_sec": hw["electric_defrost_control"]["interval_sec"],
+            "defrost_settle_sec": hw["electric_defrost_control"]["settle_sec"],
+            "defrost_max_heat_sec": hw["electric_defrost_control"]["maximum_heat_sec"],
+            "defrost_drip_sec": hw["electric_defrost_control"]["drip_sec"],
+            "defrost_fan_delay_max_sec": hw["electric_defrost_control"]["fan_delay_max_sec"],
+            "evap_rated_airflow_m3_s": evaporator_cfg["rated_airflow_m3_s"],
+            "evap_rated_face_velocity_m_s": evaporator_cfg["rated_face_velocity_m_s"],
+            "evap_airflow_proof_trip_velocity_m_s": airflow_proof["trip_velocity_m_s"],
+            "evap_airflow_proof_recovery_multiplier": airflow_proof["recovery_multiplier"],
+            "evap_airflow_proof_condition_delay_sec": airflow_proof["condition_delay_sec"],
         })
 
         latitude, longitude = location_data["latitude"], location_data["longitude"]
@@ -262,6 +278,19 @@ def generate_location_parameters_seeds(facility_cfg: dict, out_dir: Path):
             "temperature_hysteresis_exit_margin_c",
             "humidifier_max_total_discs_ceiling",
             "humidifier_discs_per_cluster_count",
+            "compressor_evaluation_interval_sec",
+            "compressor_minimum_active_time_sec",
+            "compressor_minimum_idle_time_sec",
+            "defrost_interval_sec",
+            "defrost_settle_sec",
+            "defrost_max_heat_sec",
+            "defrost_drip_sec",
+            "defrost_fan_delay_max_sec",
+            "evap_rated_airflow_m3_s",
+            "evap_rated_face_velocity_m_s",
+            "evap_airflow_proof_trip_velocity_m_s",
+            "evap_airflow_proof_recovery_multiplier",
+            "evap_airflow_proof_condition_delay_sec",
         ],
         equipment_design_rows,
     )
@@ -343,6 +372,7 @@ def generate_dispatch_type_seed(facility_cfg: dict, out_dir: Path):
 
 def generate_reason_seeds(facility_cfg: dict, out_dir: Path):
     for key, stem in (("compressor_switch_reasons", "compressor_switch_reason"),
+                      ("defrost_phases", "defrost_phase"),
                       ("defrost_termination_reasons", "defrost_termination_reason")):
         rows = [
             {f"{stem}_code": r["code"], f"{stem}_name": r["name"], f"{stem}_description": r["description"]}
@@ -364,11 +394,12 @@ def main():
     catalog = load_json(args.catalog_config)
     # The compressor the simulation actually runs is the one selected in the facility config.
     compressor_cfg = catalog["compressors"][str(facility_cfg["active_equipment_id_selection"]["compressor"])]
+    evaporator_cfg = catalog["evaporators"][str(facility_cfg["active_equipment_id_selection"]["evaporator"])]
     ref_map = load_json(args.resolver_file)
 
     generate_sensor_polling_seed(facility_cfg, args.out_dir)
     generate_compressor_curve_seed(compressor_cfg, args.out_dir, ref_map)
-    generate_location_parameters_seeds(facility_cfg, args.out_dir)
+    generate_location_parameters_seeds(facility_cfg, evaporator_cfg, args.out_dir)
     generate_refrigerant_saturation_seed(args.surfaces_dir, args.out_dir, ref_map)
     generate_crop_variety_seed(facility_cfg, args.out_dir)
     generate_driver_seed(facility_cfg, args.out_dir)

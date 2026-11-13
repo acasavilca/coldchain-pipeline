@@ -290,6 +290,19 @@ def update_sensor_readings(
         room_state_float64_vector[IDX_ROOM_STATE_O2_PCT_FILTERED_VAL] = o2_pct_supply_filtered_val
 
 @njit
+def log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, phase, termination_reason):
+    """Append one defrost state-change row: when the controller entered `phase`.
+    termination_reason is nonzero only on the HEAT -> DRIP row."""
+    row = room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_DEFROST_EVENT_WRITE_IDX]
+    if row >= defrost_event_ledger.shape[0]:
+        raise ValueError("defrost_event_ledger capacity exceeded")
+    defrost_event_ledger[row, IDX_DEFROST_EVENT_TIMESTAMP_MS] = now
+    defrost_event_ledger[row, IDX_DEFROST_EVENT_PHASE] = phase
+    defrost_event_ledger[row, IDX_DEFROST_EVENT_TERMINATION_REASON] = termination_reason
+    room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_DEFROST_EVENT_WRITE_IDX] = row + 1
+
+
+@njit
 def defrost_time_controller(
     room_state_float64_vector,
     room_state_int64_vector,
@@ -304,6 +317,7 @@ def defrost_time_controller(
 
         if phase == DF_NORMAL and now >= room_state_int64_vector[IDX_ROOM_STATE_NEXT_DEFROST_MS]:
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_WAIT_FOR_STOP
+            log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_WAIT_FOR_STOP, 0)
             room_state_int64_vector[IDX_ROOM_STATE_NEXT_DEFROST_MS] = now + equipment_configurations_int64_vector[IDX_EQ_DEFROST_INTERVAL_MS]
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_CYCLE_START_MS] = now
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_TERMINATION_REASON] = 0
@@ -314,6 +328,7 @@ def defrost_time_controller(
 
         elif phase == DF_WAIT_FOR_STOP and not room_state_int64_vector[IDX_ROOM_STATE_REFRIGERATION_IS_ACTIVE]:
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_SETTLE
+            log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_SETTLE, 0)
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
 
         elif (
@@ -321,6 +336,7 @@ def defrost_time_controller(
             and (now - room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS]) >= equipment_configurations_int64_vector[IDX_EQ_DEFROST_SETTLE_MS]
         ):
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_HEAT
+            log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_HEAT, 0)
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PROBE_ABOVE_SINCE_MS] = -1
 
@@ -341,17 +357,20 @@ def defrost_time_controller(
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PROBE_ABOVE_SINCE_MS] = -1
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_TERMINATION_REASON] = DF_TERMINATION_PROBE
+                log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_DRIP, DF_TERMINATION_PROBE)
             elif (now - room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS]) >= equipment_configurations_int64_vector[IDX_EQ_DEFROST_MAX_HEAT_MS]:
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_DRIP
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PROBE_ABOVE_SINCE_MS] = -1
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_TERMINATION_REASON] = DF_TERMINATION_TIMEOUT
+                log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_DRIP, DF_TERMINATION_TIMEOUT)
 
         elif (
             phase == DF_DRIP
             and (now - room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS]) >= equipment_configurations_int64_vector[IDX_EQ_DEFROST_DRIP_MS]
         ):
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_FAN_DELAY
+            log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_FAN_DELAY, 0)
             room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
 
         elif phase == DF_FAN_DELAY:
@@ -367,17 +386,7 @@ def defrost_time_controller(
             fan_delay_timed_out = (now - phase_start_ms) >= equipment_configurations_int64_vector[IDX_EQ_DEFROST_FAN_DELAY_MAX_MS]
 
             if coil_cold_enough or fan_delay_timed_out:
-                row = room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_DEFROST_EVENT_WRITE_IDX]
-                if row >= defrost_event_ledger.shape[0]:
-                    raise ValueError("defrost_event_ledger capacity exceeded")
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_START_MS] = room_state_int64_vector[IDX_ROOM_STATE_DEFROST_CYCLE_START_MS]
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_END_MS] = now
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_TERMINATION_REASON] = room_state_int64_vector[IDX_ROOM_STATE_DEFROST_TERMINATION_REASON]
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_FROST_MELTED_G] = int(round(1000.0 * room_state_float64_vector[IDX_ROOM_STATE_DEFROST_MELTED_MASS_ACCUM_KG]))
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_COIL_ICE_MELTED_G] = int(round(1000.0 * room_state_float64_vector[IDX_ROOM_STATE_DEFROST_COIL_MELTED_MASS_ACCUM_KG]))
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_PAN_ICE_MELTED_G] = int(round(1000.0 * room_state_float64_vector[IDX_ROOM_STATE_DEFROST_PAN_MELTED_MASS_ACCUM_KG]))
-                defrost_event_ledger[row, IDX_DEFROST_EVENT_FACE_ICE_SHED_G] = int(round(1000.0 * room_state_float64_vector[IDX_ROOM_STATE_DEFROST_FACE_SHED_MASS_ACCUM_KG]))
-                room_ephemeral_int64_vector[IDX_ROOM_EPHEMERAL_DEFROST_EVENT_WRITE_IDX] = row + 1
+                log_defrost_phase_change(room_ephemeral_int64_vector, defrost_event_ledger, now, DF_NORMAL, 0)
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE] = DF_NORMAL
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_PHASE_START_MS] = now
                 room_state_int64_vector[IDX_ROOM_STATE_DEFROST_CYCLE_START_MS] = -1
