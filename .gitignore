@@ -83,7 +83,8 @@ simulation/weather/location_*/
 
 # README images: only the ones the README uses are committed (others stay local)
 docs/img/*
-!docs/img/header.jpg
+!docs/img/header-dark.jpg
+!docs/img/header-light.jpg
 !docs/img/hero-power-dark.png
 !docs/img/hero-power-light.png
 simulation/runs_old_keep/
