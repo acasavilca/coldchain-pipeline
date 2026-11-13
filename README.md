@@ -13,6 +13,8 @@ analytics-ready marts.
 
 *Hot afternoons cost efficiency: COP falls from about 4.0 to 2.8 and compressor power rises by about 2.5 kW. Every line comes from dbt models in BigQuery (`stg_weather`, `fct_compressor_performance`). The data is synthetic.*
 
+**Scale:** two locations over 30 days produce about 251 million raw rows (250.9M of them telemetry, 16 GB). The dbt layer pivots them into one row per location per 100 ms, which is 51.84M rows (864,000 per location per day) at each telemetry stage, and 16.8M steady-state readings in `fct_compressor_performance`. Keeping that fast and correct in BigQuery took day-partitioned incremental models, checkpoint tables that carry state across days, and forward fills split by day to stay within BigQuery's sort limits.
+
 <!-- business section goes here -->
 
 ## About the data
@@ -178,7 +180,7 @@ from it. The low-pressure trip models have only been run on empty data so far, b
 simulated history does not yet contain trips; a run that triggers them is still to do.
 
 This repository started as a Data Engineering Zoomcamp project. The submitted version is tagged
-[`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite engineered for enterprise-scale simulation and robust incremental modeling.
+[`zoomcamp-submission`](../../tree/zoomcamp-submission). The current version is a complete, ground-up rewrite built for much larger data volumes and incremental processing.
 
 ## Roadmap
 
