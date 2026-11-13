@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="docs/img/header.jpg" alt="coldchain-pipeline: a physics-based cold-storage simulator feeding a BigQuery and dbt pipeline" width="100%">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/header-dark.jpg">
+    <img src="docs/img/header-light.jpg" alt="coldchain-pipeline: a physics-based cold-storage simulator feeding a BigQuery and dbt pipeline" width="100%">
 </p>
 
 A synthetic cold-storage data platform: a physics-based simulator generates raw SCADA-style
