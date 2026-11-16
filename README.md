@@ -1,12 +1,10 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/img/header-dark.jpg">
-    <img src="docs/img/header-light.jpg" alt="coldchain-pipeline: a physics-based cold-storage simulator feeding a BigQuery and dbt pipeline" width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/header-dark.svg">
+    <img src="docs/img/header-light.svg" alt="coldchain-pipeline: a physics-based cold-storage simulator feeding an incremental BigQuery and dbt telemetry warehouse." width="100%">
 </p>
 
-A synthetic cold-storage data platform: a physics-based simulator generates raw SCADA-style
-data for a fruit-packing facility's cold rooms, and a dbt + BigQuery project turns it into
-analytics-ready marts.
+A high-volume synthetic cold-storage telemetry platform: a Numba-accelerated physics simulator with time-varying stochastic operations generates daily Parquet batches of 100 ms SCADA sensor readings (with realistic noise and dropout) alongside event ledgers for a fruit-packing facility's cold rooms, feeding a BigQuery and dbt warehouse with partition-aligned incremental models that turn them into analytics-ready marts.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/hero-power-dark.png">
