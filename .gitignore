@@ -74,7 +74,9 @@ backups/
 *.log
 
 # personal / local-only
-dbt_project/notes
+dbt_project/notes*
+dbt_project/tests/notes*
+dbt_project/tests/plan*.md
 dbt_project/test_helpers/legacy_prod/
 
 # generated weather caches: only location 1 is committed (so the repo runs offline)
@@ -83,11 +85,23 @@ simulation/weather/location_*/
 
 # README images: only the ones the README uses are committed (others stay local)
 docs/img/*
-!docs/img/header-dark.jpg
-!docs/img/header-light.jpg
+!docs/img/header-dark.svg
+!docs/img/header-light.svg
 !docs/img/hero-power-dark.png
 !docs/img/hero-power-light.png
 simulation/runs_old_keep/
 
 # old test scripts superseded by test_helpers/
 dbt_project/test_helpers/legacy_prod/
+
+# terraform / credentials / editor (merged from the old dbt_project/.gitignore)
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+**/.terraform/
+*credentials*.json
+*service_account*.json
+.env_encoded
+*password*
+dbt_internal_packages/
+*.swp
